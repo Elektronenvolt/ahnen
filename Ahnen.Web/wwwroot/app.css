@@ -124,6 +124,9 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 /* family-chart card polish */
 .f3 .card_cont .card-inner { border-radius: var(--radius); box-shadow: var(--shadow); }
 
+/* connectors: dark grey instead of the library's white */
+.f3 path.link { stroke: #4b5563; }
+
 /* ---------- detail panel ---------- */
 .detail-panel {
     width: 340px; flex: 0 0 auto; background: var(--surface);
