@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "rootPersonId": "I1",
+  "persons": [
+    {
+      "id": "I1",
+      "names": [{ "type": "BIRTH", "given": "Max", "surname": "Mustermann" }],
+      "sex": "M",
+      "events": [
+        { "type": "BIRT", "date": "12 APR 1980", "place": "München" },
+        { "type": "OCCU", "value": "Engineer" }
+      ],
+      "address": { "lines": ["Musterstraße 1"], "city": "München", "postalCode": "80331", "country": "Deutschland" },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I2",
+      "names": [
+        { "type": "BIRTH", "given": "Erika", "surname": "Schmidt" },
+        { "type": "MARRIED", "given": "Erika", "surname": "Mustermann" }
+      ],
+      "sex": "F",
+      "events": [{ "type": "BIRT", "date": "3 SEP 1982", "place": "Hamburg" }],
+      "address": { "lines": [], "city": null, "postalCode": null, "country": null },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I3",
+      "names": [{ "type": "BIRTH", "given": "Lena", "surname": "Mustermann" }],
+      "sex": "F",
+      "events": [{ "type": "BIRT", "date": "21 JUN 2010", "place": "München" }],
+      "address": { "lines": [], "city": null, "postalCode": null, "country": null },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I4",
+      "names": [{ "type": "BIRTH", "given": "Paul", "surname": "Mustermann" }],
+      "sex": "M",
+      "events": [{ "type": "BIRT", "date": "2 FEB 2013", "place": "München" }],
+      "address": { "lines": [], "city": null, "postalCode": null, "country": null },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I5",
+      "names": [{ "type": "BIRTH", "given": "Hans", "surname": "Mustermann" }],
+      "sex": "M",
+      "events": [
+        { "type": "BIRT", "date": "ABT 1950", "place": "Nürnberg" },
+        { "type": "DEAT", "date": "17 NOV 2020", "place": "München" }
+      ],
+      "address": { "lines": [], "city": null, "postalCode": null, "country": null },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I6",
+      "names": [{ "type": "BIRTH", "given": "Ingrid", "surname": "Bauer" }],
+      "sex": "F",
+      "events": [{ "type": "BIRT", "date": "1953", "place": "Augsburg" }],
+      "address": { "lines": [], "city": null, "postalCode": null, "country": null },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I7",
+      "names": [{ "type": "BIRTH", "given": "Anna", "surname": "Mustermann" }],
+      "sex": "F",
+      "events": [{ "type": "BIRT", "date": "8 MAR 1978", "place": "Nürnberg" }],
+      "address": { "lines": [], "city": null, "postalCode": null, "country": null },
+      "notes": [],
+      "media": []
+    }
+  ],
+  "families": [
+    {
+      "id": "F1",
+      "partnerIds": ["I1", "I2"],
+      "events": [{ "type": "MARR", "date": "15 MAY 2008", "place": "München" }],
+      "childRefs": [
+        { "personId": "I3", "pedigree": "BIRTH" },
+        { "personId": "I4", "pedigree": "BIRTH" }
+      ]
+    },
+    {
+      "id": "F2",
+      "partnerIds": ["I5", "I6"],
+      "events": [{ "type": "MARR", "date": "1975", "place": "Nürnberg" }],
+      "childRefs": [
+        { "personId": "I1", "pedigree": "BIRTH" },
+        { "personId": "I7", "pedigree": "BIRTH" }
+      ]
+    }
+  ]
+}

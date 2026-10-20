@@ -1,0 +1,25 @@
+@using Ahnen.Web.Models
+
+@if (People.Count > 0)
+{
+    <div class="relation-list">
+        <div class="detail-row-label">@Title</div>
+        <ul>
+            @foreach (var p in People)
+            {
+                <li>
+                    <button class="link-button" @onclick="() => OnSelect.InvokeAsync(p.Id)">
+                        @p.DisplayName
+                    </button>
+                    <span class="relation-years">@p.LifeYears</span>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public IReadOnlyList<Person> People { get; set; } = [];
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+}

@@ -1,0 +1,9 @@
+bin/
+obj/
+node_modules/
+.idea/
+.DS_Store
+*.user
+data/
+Ahnen.Web/wwwroot/js/tree.js
+Ahnen.Web/wwwroot/css/family-chart.css

@@ -1,0 +1,24 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> L
+@inject NavigationManager Nav
+
+<header class="app-header">
+    <a class="app-brand" href="/">
+        <span class="app-brand-icon">🌳</span> @L["AppTitle"]
+    </a>
+    <nav class="app-nav">
+        <NavLink class="app-nav-link" href="/" Match="NavLinkMatch.All">@L["Nav_Tree"]</NavLink>
+        <NavLink class="app-nav-link" href="/edit">@L["Nav_Edit"]</NavLink>
+    </nav>
+    <div class="app-lang" title="@L["Language"]">
+        <a class="app-lang-link @(IsCulture("en") ? "active" : "")" href="/set-culture?culture=en&redirect=@CurrentPath">EN</a>
+        <span class="app-lang-sep">|</span>
+        <a class="app-lang-link @(IsCulture("de") ? "active" : "")" href="/set-culture?culture=de&redirect=@CurrentPath">DE</a>
+    </div>
+</header>
+
+@code {
+    private string CurrentPath => Uri.EscapeDataString("/" + Nav.ToBaseRelativePath(Nav.Uri));
+    private static bool IsCulture(string c) =>
+        System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == c;
+}

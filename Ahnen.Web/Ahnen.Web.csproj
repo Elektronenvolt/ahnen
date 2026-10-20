@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="package.json;package-lock.json;tsconfig.json" />
+    <None Include="package.json;tsconfig.json" />
+    <Content Update="seed\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Build the TypeScript tree module when sources change. Requires Node.js.
+       Pass /p:BuildClientSkip=true when the bundle is prebuilt (e.g. in Docker). -->
+  <Target Name="NpmInstall" BeforeTargets="BuildClient"
+          Condition="'$(BuildClientSkip)' != 'true' AND !Exists('node_modules')">
+    <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <Target Name="BuildClient" BeforeTargets="AssignTargetPaths" Condition="'$(BuildClientSkip)' != 'true'"
+          Inputs="ClientSrc\tree.ts;package.json" Outputs="wwwroot\js\tree.js">
+    <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,721 @@
+@page "/edit"
+@using System.Globalization
+@using Ahnen.Web.Models
+@using Ahnen.Web.Services
+@using Microsoft.Extensions.Localization
+@implements IDisposable
+@inject FamilyTreeStore Store
+@inject PhotoService Photos
+@inject IStringLocalizer<SharedResources> L
+@inject NavigationManager Nav
+
+<PageTitle>@L["AppTitle"] – @L["Nav_Edit"]</PageTitle>
+
+<div class="edit-page">
+    <aside class="person-list-panel">
+        <div class="person-list-tools">
+            <input class="input" placeholder="@L["Edit_Search"]" @bind="_search" @bind:event="oninput" />
+            <button class="btn btn-primary" @onclick="NewPerson">＋ @L["Edit_NewPerson"]</button>
+        </div>
+        <div class="person-list-count">@string.Format(L["Edit_People"], _persons.Count)</div>
+        <ul class="person-list">
+            @foreach (var p in FilteredPersons())
+            {
+                <li class="@(p.Id == _personId ? "active" : "")">
+                    <button @onclick="() => Select(p.Id)">
+                        @if (p.PhotoFile is { } photo)
+                        {
+                            <img class="person-avatar" src="/media/@ChartDataService.ThumbPath(photo)" alt="" />
+                        }
+                        else
+                        {
+                            <span class="person-avatar person-avatar-text @(p.Sex == Sex.F ? "female" : "male")">@UiHelpers.Initials(p)</span>
+                        }
+                        <span class="person-list-name">
+                            @p.DisplayName
+                            <small>@p.LifeYears</small>
+                        </span>
+                    </button>
+                </li>
+            }
+        </ul>
+    </aside>
+
+    <section class="editor-panel">
+        @if (_person is null)
+        {
+            <div class="editor-empty">@L["Edit_SelectPrompt"]</div>
+        }
+        else
+        {
+            <div class="editor-head">
+                <h2>@_person.DisplayName</h2>
+                <div class="editor-head-actions">
+                    <a class="btn" href="/?person=@_person.Id">@L["Edit_ShowInTree"]</a>
+                    <button class="btn btn-danger" @onclick="AskDelete">@L["Btn_Delete"]</button>
+                </div>
+            </div>
+
+            <details class="editor-section" open>
+                <summary>@L["Section_Names"]</summary>
+                @for (var i = 0; i < _person.Names.Count; i++)
+                {
+                    var index = i;
+                    var name = _person.Names[index];
+                    <div class="form-grid">
+                        <label>@L["Field_NameType"]
+                            <select class="input" @bind="name.Type" @bind:after="ScheduleSave">
+                                @foreach (var t in Enum.GetValues<NameType>())
+                                {
+                                    <option value="@t">@(L[$"NameType_{t}"])</option>
+                                }
+                            </select>
+                        </label>
+                        <label>@L["Field_Given"]
+                            <input class="input" @bind="name.Given" @bind:after="ScheduleSave" />
+                        </label>
+                        <label>@L["Field_Surname"]
+                            <input class="input" @bind="name.Surname" @bind:after="ScheduleSave" />
+                        </label>
+                        <label>@L["Field_Nickname"]
+                            <input class="input" @bind="name.Nickname" @bind:after="ScheduleSave" />
+                        </label>
+                        @if (_person.Names.Count > 1)
+                        {
+                            <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => RemoveName(index)">✕</button>
+                        }
+                    </div>
+                }
+                <button class="btn btn-small" @onclick="AddName">＋ @L["Btn_AddName"]</button>
+            </details>
+
+            <details class="editor-section" open>
+                <summary>@L["Section_Facts"]</summary>
+                <div class="form-grid">
+                    <label>@L["Field_Sex"]
+                        <select class="input" @bind="_person.Sex" @bind:after="ScheduleSave">
+                            @foreach (var s in Enum.GetValues<Sex>())
+                            {
+                                <option value="@s">@(L[$"Sex_{s}"])</option>
+                            }
+                        </select>
+                    </label>
+                    <label>@L["Field_Occupation"]
+                        <input class="input" @bind="_occupation" @bind:after="ScheduleSave" />
+                    </label>
+                </div>
+                <div class="form-grid">
+                    <label>@L["Field_Birth"] – @L["Field_Date"]
+                        <input class="input @(_birthDateError ? "invalid" : "")" @bind="_birthDate" @bind:after="ScheduleSave"
+                               placeholder="@L["Hint_Date"]" />
+                        @if (_birthDateError)
+                        {
+                            <span class="field-error">@L["Validation_BadDate"]</span>
+                        }
+                        else if (NormalizedPreview(_birthDate) is { Length: > 0 } bp)
+                        {
+                            <span class="field-preview">@bp</span>
+                        }
+                    </label>
+                    <label>@L["Field_Birth"] – @L["Field_Place"]
+                        <input class="input" @bind="_birthPlace" @bind:after="ScheduleSave" />
+                    </label>
+                    <label>@L["Field_Death"] – @L["Field_Date"]
+                        <input class="input @(_deathDateError ? "invalid" : "")" @bind="_deathDate" @bind:after="ScheduleSave"
+                               placeholder="@L["Hint_Date"]" />
+                        @if (_deathDateError)
+                        {
+                            <span class="field-error">@L["Validation_BadDate"]</span>
+                        }
+                        @if (_lifeSpanError)
+                        {
+                            <span class="field-error">@L["Validation_BirthAfterDeath"]</span>
+                        }
+                    </label>
+                    <label>@L["Field_Death"] – @L["Field_Place"]
+                        <input class="input" @bind="_deathPlace" @bind:after="ScheduleSave" />
+                    </label>
+                </div>
+                <div class="form-grid">
+                    <label>@L["Field_AddressLines"]
+                        <input class="input" @bind="_addressLine" @bind:after="ScheduleSave" />
+                    </label>
+                    <label>@L["Field_PostalCode"]
+                        <input class="input" @bind="_person.Address.PostalCode" @bind:after="ScheduleSave" />
+                    </label>
+                    <label>@L["Field_City"]
+                        <input class="input" @bind="_person.Address.City" @bind:after="ScheduleSave" />
+                    </label>
+                    <label>@L["Field_Country"]
+                        <input class="input" @bind="_person.Address.Country" @bind:after="ScheduleSave" />
+                    </label>
+                </div>
+                <label class="form-wide">@L["Field_Notes"]
+                    <textarea class="input" rows="3" @bind="_notes" @bind:after="ScheduleSave"></textarea>
+                </label>
+            </details>
+
+            <details class="editor-section" open>
+                <summary>@L["Section_Photo"]</summary>
+                <div class="photo-row">
+                    @if (_person.PhotoFile is { } photoFile)
+                    {
+                        <img class="photo-preview" src="/media/@photoFile" alt="" />
+                        <button class="btn" @onclick="RemovePhoto">@L["Btn_RemovePhoto"]</button>
+                    }
+                    <label class="btn btn-primary photo-upload">
+                        @L["Btn_UploadPhoto"]
+                        <InputFile OnChange="UploadPhoto" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp" />
+                    </label>
+                    @if (_photoError is not null)
+                    {
+                        <span class="field-error">@_photoError</span>
+                    }
+                </div>
+            </details>
+
+            <details class="editor-section" open>
+                <summary>@L["Section_Relationships"]</summary>
+
+                <div class="rel-group">
+                    <h4>@L["Detail_Parents"]</h4>
+                    @foreach (var family in Store.FamiliesAsChild(_personId!))
+                    {
+                        var fam = family;
+                        foreach (var parentId in fam.PartnerIds)
+                        {
+                            var parent = Store.GetPerson(parentId);
+                            if (parent is null) continue;
+                            <div class="rel-row">
+                                <button class="link-button" @onclick="() => Select(parent.Id)">@parent.DisplayName</button>
+                                <span class="relation-years">@parent.LifeYears</span>
+                                <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => UnlinkParent(fam.Id, parent.Id)">✕</button>
+                            </div>
+                        }
+                        var childRef = fam.ChildRefs.First(c => c.PersonId == _personId);
+                        <label class="rel-pedigree">@L["Field_Pedigree"]
+                            <select class="input" value="@childRef.Pedigree" @onchange="e => SetPedigree(fam.Id, e.Value!.ToString()!)">
+                                @foreach (var pd in Enum.GetValues<Pedigree>())
+                                {
+                                    <option value="@pd">@(L[$"Pedi_{pd}"])</option>
+                                }
+                            </select>
+                        </label>
+                    }
+                    <div class="rel-actions">
+                        @if (CanAddParent())
+                        {
+                            <button class="btn btn-small" @onclick='() => OpenPicker("father")'>＋ @L["Btn_AddFather"]</button>
+                            <button class="btn btn-small" @onclick='() => OpenPicker("mother")'>＋ @L["Btn_AddMother"]</button>
+                        }
+                    </div>
+                    <div class="hint">@L["Hint_Siblings"]</div>
+                </div>
+
+                <div class="rel-group">
+                    <h4>@L["Detail_Partners"] / @L["Detail_Children"]</h4>
+                    @foreach (var family in Store.FamiliesAsPartner(_personId!))
+                    {
+                        var fam = family;
+                        var partner = fam.OtherPartner(_personId!) is { } pid ? Store.GetPerson(pid) : null;
+                        <div class="family-card">
+                            <div class="rel-row">
+                                @if (partner is not null)
+                                {
+                                    <button class="link-button" @onclick="() => Select(partner.Id)">@partner.DisplayName</button>
+                                    <span class="relation-years">@partner.LifeYears</span>
+                                    <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => UnlinkPartner(fam.Id, partner.Id)">✕</button>
+                                }
+                                else
+                                {
+                                    <em class="muted">—</em>
+                                }
+                            </div>
+                            <div class="form-grid">
+                                <label>@L["Field_Status"]
+                                    <select class="input" value="@FamilyStatus.GetStatus(fam)"
+                                            @onchange="e => SetStatus(fam.Id, e.Value!.ToString()!)">
+                                        @foreach (var statusCode in FamilyStatus.Options)
+                                        {
+                                            <option value="@statusCode">@(L[$"Fam_{statusCode}"])</option>
+                                        }
+                                    </select>
+                                </label>
+                                @if (FamilyStatus.GetStatus(fam) is not "NONE" and not "ENGA")
+                                {
+                                    <label>@L["Field_MarriageDate"]
+                                        <input class="input" value="@fam.Marriage?.Date"
+                                               @onchange="e => SetMarriageDate(fam.Id, e.Value!.ToString())"
+                                               placeholder="@L["Hint_Date"]" />
+                                    </label>
+                                    <label>@L["Field_MarriagePlace"]
+                                        <input class="input" value="@fam.Marriage?.Place"
+                                               @onchange="e => SetMarriagePlace(fam.Id, e.Value!.ToString())" />
+                                    </label>
+                                }
+                            </div>
+                            <div class="family-children">
+                                @foreach (var childRef in fam.ChildRefs)
+                                {
+                                    var cr = childRef;
+                                    var child = Store.GetPerson(cr.PersonId);
+                                    if (child is null) continue;
+                                    <div class="rel-row">
+                                        <button class="link-button" @onclick="() => Select(child.Id)">@child.DisplayName</button>
+                                        <span class="relation-years">@child.LifeYears</span>
+                                        <select class="input input-compact" value="@cr.Pedigree"
+                                                @onchange="e => SetChildPedigree(fam.Id, cr.PersonId, e.Value!.ToString()!)">
+                                            @foreach (var pd in Enum.GetValues<Pedigree>())
+                                            {
+                                                <option value="@pd">@(L[$"Pedi_{pd}"])</option>
+                                            }
+                                        </select>
+                                        <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => UnlinkChild(fam.Id, cr.PersonId)">✕</button>
+                                    </div>
+                                }
+                                <button class="btn btn-small" @onclick='() => OpenPicker("child", fam.Id)'>＋ @L["Btn_AddChild"]</button>
+                            </div>
+                        </div>
+                    }
+                    <div class="rel-actions">
+                        <button class="btn btn-small" @onclick='() => OpenPicker("partner")'>＋ @L["Btn_AddPartner"]</button>
+                        @if (!Store.FamiliesAsPartner(_personId!).Any())
+                        {
+                            <button class="btn btn-small" @onclick='() => OpenPicker("child")'>＋ @L["Btn_AddChild"]</button>
+                        }
+                    </div>
+                </div>
+            </details>
+        }
+    </section>
+</div>
+
+<PersonPicker Visible="_pickerVisible" Title="@_pickerTitle" DefaultSex="_pickerSex"
+              ExcludeIds="PickerExcludes()" OnResult="PickerResult" />
+
+@if (_confirmDelete)
+{
+    <div class="modal-backdrop" @onclick="() => _confirmDelete = false">
+        <div class="modal-card" @onclick:stopPropagation>
+            <p>@string.Format(L["Confirm_Delete"], _person?.DisplayName, DeleteImpact())</p>
+            <div class="modal-actions">
+                <button class="btn" @onclick="() => _confirmDelete = false">@L["Btn_Cancel"]</button>
+                <button class="btn btn-danger" @onclick="DoDelete">@L["Btn_Delete"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_errorMessage is not null)
+{
+    <div class="toast toast-error" @onclick="() => _errorMessage = null">
+        <span>⚠ @_errorMessage</span>
+    </div>
+}
+
+@if (_toast is not null)
+{
+    <div class="toast">
+        <span>@_toast ✓</span>
+        <button class="link-button" @onclick="UndoLast">@L["Btn_Undo"]</button>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "person")]
+    public string? PersonQuery { get; set; }
+
+    private IReadOnlyList<Person> _persons = [];
+    private string? _personId;
+    private Person? _person;
+    private string _search = "";
+
+    // Editable mirrors of event-backed fields
+    private string _birthDate = "", _birthPlace = "", _deathDate = "", _deathPlace = "";
+    private string _occupation = "", _notes = "", _addressLine = "";
+    private bool _birthDateError, _deathDateError, _lifeSpanError;
+    private string? _photoError;
+
+    private Timer? _saveTimer;
+    private string? _toast;
+    private Timer? _toastTimer;
+    private bool _confirmDelete;
+
+    private bool _pickerVisible;
+    private string _pickerTitle = "";
+    private string _pickerMode = "";
+    private string? _pickerFamilyId;
+    private Sex _pickerSex = Sex.U;
+
+    protected override void OnInitialized()
+    {
+        _persons = Store.Persons;
+        Store.Changed += OnStoreChanged;
+        if (PersonQuery is { Length: > 0 })
+            Select(PersonQuery);
+    }
+
+    private void OnStoreChanged() =>
+        _ = InvokeAsync(() =>
+        {
+            _persons = Store.Persons;
+            StateHasChanged();
+        });
+
+    private IEnumerable<Person> FilteredPersons() =>
+        _persons
+            .Where(p => _search.Length == 0 ||
+                        p.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                        (p.Birth?.Place?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false))
+            .OrderBy(p => p.PrimaryName.Surname, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(p => p.PrimaryName.Given, StringComparer.CurrentCultureIgnoreCase);
+
+    private void Select(string personId)
+    {
+        FlushSave();
+        var person = Store.GetPerson(personId);
+        if (person is null) return;
+        _personId = personId;
+        _person = person;
+        _birthDate = person.Birth?.Date ?? "";
+        _birthPlace = person.Birth?.Place ?? "";
+        _deathDate = person.Death?.Date ?? "";
+        _deathPlace = person.Death?.Place ?? "";
+        _occupation = person.Occupation ?? "";
+        _notes = string.Join("\n", person.Notes);
+        _addressLine = string.Join(", ", person.Address.Lines);
+        _birthDateError = _deathDateError = _lifeSpanError = false;
+        _photoError = null;
+    }
+
+    private void NewPerson()
+    {
+        FlushSave();
+        var person = Store.AddPerson("", "", Sex.U);
+        Select(person.Id);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    // ---- auto-save -------------------------------------------------------
+
+    private void ScheduleSave()
+    {
+        _saveTimer?.Dispose();
+        _saveTimer = new Timer(_ => InvokeAsync(SaveNow), null, 500, Timeout.Infinite);
+    }
+
+    private void FlushSave()
+    {
+        if (_saveTimer is null) return;
+        _saveTimer.Dispose();
+        _saveTimer = null;
+        SaveNow();
+    }
+
+    private void SaveNow()
+    {
+        _saveTimer?.Dispose();
+        _saveTimer = null;
+        if (_person is null) return;
+
+        // Dates: validate, keep raw input visible on error, never persist bad values.
+        var birth = NormalizeDate(_birthDate, out _birthDateError);
+        var death = NormalizeDate(_deathDate, out _deathDateError);
+        _lifeSpanError = false;
+        if (!_birthDateError && !_deathDateError && birth is not null && death is not null)
+        {
+            var b = GedcomDate.Approximate(birth);
+            var dd = GedcomDate.Approximate(death);
+            _lifeSpanError = b is not null && dd is not null && b > dd;
+        }
+        if (_birthDateError || _deathDateError || _lifeSpanError)
+        {
+            StateHasChanged();
+            return;
+        }
+
+        ApplyEvent(IndividualEventType.BIRT, birth, Trim(_birthPlace), null);
+        ApplyEvent(IndividualEventType.DEAT, death, Trim(_deathPlace), null);
+        ApplyEvent(IndividualEventType.OCCU, null, null, Trim(_occupation));
+        _person.Notes = _notes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        _person.Address.Lines = _addressLine.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+        Store.UpdatePerson(_person);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void ApplyEvent(IndividualEventType type, string? date, string? place, string? value)
+    {
+        if (_person is null) return;
+        var hasContent = date is not null || place is not null || value is not null;
+        var ev = _person.Events.FirstOrDefault(e => e.Type == type);
+        if (!hasContent)
+        {
+            if (ev is not null) _person.Events.Remove(ev);
+            return;
+        }
+        ev ??= _person.GetOrAddEvent(type);
+        ev.Date = date;
+        ev.Place = place;
+        ev.Value = value;
+    }
+
+    private string? NormalizeDate(string input, out bool error)
+    {
+        error = false;
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var normalized = GedcomDate.Normalize(input);
+        error = normalized is null;
+        return normalized;
+    }
+
+    private static string? Trim(string s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    private string NormalizedPreview(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return "";
+        var normalized = GedcomDate.Normalize(input);
+        return normalized is null || normalized == input.Trim().ToUpperInvariant()
+            ? ""
+            : $"→ {GedcomDate.Display(normalized, CultureInfo.CurrentUICulture)} ({normalized})";
+    }
+
+    // ---- names -----------------------------------------------------------
+
+    private void AddName()
+    {
+        _person?.Names.Add(new PersonName { Type = NameType.AKA });
+        ScheduleSave();
+    }
+
+    private void RemoveName(int index)
+    {
+        if (_person is null || _person.Names.Count <= 1) return;
+        _person.Names.RemoveAt(index);
+        ScheduleSave();
+    }
+
+    // ---- photo -----------------------------------------------------------
+
+    private async Task UploadPhoto(InputFileChangeEventArgs e)
+    {
+        if (_person is null) return;
+        _photoError = null;
+        var file = e.File;
+        if (file.Size > PhotoService.MaxUploadBytes || !PhotoService.IsAllowed(file.Name))
+        {
+            _photoError = $"✗ {file.Name}";
+            return;
+        }
+        try
+        {
+            await using var stream = file.OpenReadStream(PhotoService.MaxUploadBytes);
+            var media = await Photos.SaveAsync(_person.Id, stream, file.Name);
+            foreach (var old in _person.Media)
+                Photos.Delete(old.File);
+            _person.Media = [media];
+            Store.UpdatePerson(_person);
+            ShowToast(L["Toast_Saved"]);
+        }
+        catch (Exception ex)
+        {
+            _photoError = ex.Message;
+        }
+    }
+
+    private void RemovePhoto()
+    {
+        if (_person is null) return;
+        foreach (var old in _person.Media)
+            Photos.Delete(old.File);
+        _person.Media = [];
+        Store.UpdatePerson(_person);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    // ---- relationships ---------------------------------------------------
+
+    private bool CanAddParent() =>
+        _personId is not null &&
+        Store.FamiliesAsChild(_personId).SelectMany(f => f.PartnerIds).Distinct().Count() < 2;
+
+    private void OpenPicker(string mode, string? familyId = null)
+    {
+        FlushSave();
+        _pickerMode = mode;
+        _pickerFamilyId = familyId;
+        (_pickerTitle, _pickerSex) = mode switch
+        {
+            "father" => ((string)L["Btn_AddFather"], Sex.M),
+            "mother" => ((string)L["Btn_AddMother"], Sex.F),
+            "partner" => ((string)L["Btn_AddPartner"], Sex.U),
+            _ => ((string)L["Btn_AddChild"], Sex.U)
+        };
+        _pickerVisible = true;
+    }
+
+    private IReadOnlyCollection<string> PickerExcludes() =>
+        _personId is null ? [] : [_personId];
+
+    private void PickerResult(string? pickedId)
+    {
+        _pickerVisible = false;
+        if (pickedId is null || _personId is null) return;
+        try
+        {
+            switch (_pickerMode)
+            {
+                case "father" or "mother":
+                    Store.AddParent(_personId, pickedId);
+                    break;
+                case "partner":
+                    Store.AddPartner(_personId, pickedId);
+                    break;
+                case "child":
+                    Store.AddChild(_personId, pickedId, familyId: _pickerFamilyId);
+                    break;
+            }
+            ShowToast(L["Toast_Saved"]);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        Select(_personId);
+    }
+
+    private string? _errorMessage;
+
+    private void UnlinkParent(string familyId, string parentId)
+    {
+        Store.RemovePartner(familyId, parentId);
+        Select(_personId!);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void UnlinkPartner(string familyId, string partnerId)
+    {
+        Store.RemovePartner(familyId, partnerId);
+        Select(_personId!);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void UnlinkChild(string familyId, string childId)
+    {
+        Store.RemoveChild(familyId, childId);
+        Select(_personId!);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void SetPedigree(string familyId, string value)
+    {
+        Store.SetChildPedigree(familyId, _personId!, Enum.Parse<Pedigree>(value));
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void SetChildPedigree(string familyId, string childId, string value)
+    {
+        Store.SetChildPedigree(familyId, childId, Enum.Parse<Pedigree>(value));
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void SetStatus(string familyId, string status)
+    {
+        var family = Store.GetFamily(familyId);
+        if (family is null) return;
+        FamilyStatus.ApplyStatus(family, status);
+        Store.UpdateFamily(family);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void SetMarriageDate(string familyId, string? input)
+    {
+        var family = Store.GetFamily(familyId);
+        if (family is null) return;
+        var normalized = GedcomDate.Normalize(input);
+        if (input is { Length: > 0 } && normalized is null) return;
+        var marr = family.Events.FirstOrDefault(e => e.Type == FamilyEventType.MARR);
+        if (marr is null)
+        {
+            marr = new FamilyEvent { Type = FamilyEventType.MARR };
+            family.Events.Insert(0, marr);
+        }
+        marr.Date = normalized;
+        Store.UpdateFamily(family);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    private void SetMarriagePlace(string familyId, string? place)
+    {
+        var family = Store.GetFamily(familyId);
+        if (family is null) return;
+        var marr = family.Events.FirstOrDefault(e => e.Type == FamilyEventType.MARR);
+        if (marr is null)
+        {
+            marr = new FamilyEvent { Type = FamilyEventType.MARR };
+            family.Events.Insert(0, marr);
+        }
+        marr.Place = Trim(place ?? "");
+        Store.UpdateFamily(family);
+        ShowToast(L["Toast_Saved"]);
+    }
+
+    // ---- delete ----------------------------------------------------------
+
+    private void AskDelete() => _confirmDelete = true;
+
+    private int DeleteImpact()
+    {
+        if (_personId is null) return 0;
+        return Store.FamiliesAsPartner(_personId).Sum(f => f.PartnerIds.Count - 1 + f.ChildRefs.Count)
+             + Store.FamiliesAsChild(_personId).Sum(f => f.PartnerIds.Count);
+    }
+
+    private void DoDelete()
+    {
+        if (_personId is null) return;
+        _confirmDelete = false;
+        var photos = Store.DeletePerson(_personId);
+        foreach (var photo in photos)
+            Photos.Delete(photo);
+        _person = null;
+        _personId = null;
+        ShowToast(L["Toast_Deleted"]);
+    }
+
+    // ---- toast / undo ----------------------------------------------------
+
+    private void ShowToast(string text)
+    {
+        _toast = text;
+        _toastTimer?.Dispose();
+        _toastTimer = new Timer(_ => InvokeAsync(() =>
+        {
+            _toast = null;
+            StateHasChanged();
+        }), null, 4000, Timeout.Infinite);
+        StateHasChanged();
+    }
+
+    private void UndoLast()
+    {
+        if (!Store.Undo()) return;
+        _toast = null;
+        _toastTimer?.Dispose();
+        if (_personId is not null && Store.GetPerson(_personId) is not null)
+            Select(_personId);
+        else
+        {
+            _person = null;
+            _personId = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        FlushSave();
+        Store.Changed -= OnStoreChanged;
+        _saveTimer?.Dispose();
+        _toastTimer?.Dispose();
+    }
+}

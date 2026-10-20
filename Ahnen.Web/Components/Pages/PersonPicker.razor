@@ -1,0 +1,86 @@
+@using Ahnen.Web.Models
+@using Ahnen.Web.Services
+@using Microsoft.Extensions.Localization
+@inject FamilyTreeStore Store
+@inject IStringLocalizer<SharedResources> L
+
+@if (Visible)
+{
+    <div class="modal-backdrop" @onclick="Cancel">
+        <div class="modal-card" @onclick:stopPropagation>
+            <h3>@Title</h3>
+            <input class="input" placeholder="@L["Edit_Search"]" @bind="_search" @bind:event="oninput" autofocus />
+            <ul class="picker-list">
+                @foreach (var p in Matches())
+                {
+                    <li>
+                        <button class="picker-item" @onclick="() => Pick(p.Id)">
+                            <strong>@p.DisplayName</strong>
+                            <span class="relation-years">@p.LifeYears</span>
+                        </button>
+                    </li>
+                }
+            </ul>
+            <div class="picker-new">
+                <div class="picker-new-title">@L["Picker_New"]</div>
+                <div class="picker-new-row">
+                    <input class="input" placeholder="@L["Field_Given"]" @bind="_newGiven" />
+                    <input class="input" placeholder="@L["Field_Surname"]" @bind="_newSurname" />
+                    <select class="input" @bind="_newSex">
+                        @foreach (var s in Enum.GetValues<Sex>())
+                        {
+                            <option value="@s">@(L[$"Sex_{s}"])</option>
+                        }
+                    </select>
+                    <button class="btn btn-primary" disabled="@(string.IsNullOrWhiteSpace(_newGiven) && string.IsNullOrWhiteSpace(_newSurname))"
+                            @onclick="CreateNew">@L["Btn_Create"]</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" @onclick="Cancel">@L["Btn_Cancel"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public string Title { get; set; } = "";
+    /// <summary>Preselected sex for the create-new form (e.g. M when adding a father).</summary>
+    [Parameter] public Sex DefaultSex { get; set; } = Sex.U;
+    [Parameter] public IReadOnlyCollection<string> ExcludeIds { get; set; } = [];
+    /// <summary>Returns the picked/created person ID, or null when cancelled.</summary>
+    [Parameter] public EventCallback<string?> OnResult { get; set; }
+
+    private string _search = "";
+    private string _newGiven = "";
+    private string _newSurname = "";
+    private Sex _newSex = Sex.U;
+
+    protected override void OnParametersSet()
+    {
+        if (Visible) return;
+        _search = "";
+        _newGiven = "";
+        _newSurname = "";
+        _newSex = DefaultSex;
+    }
+
+    private IEnumerable<Person> Matches() =>
+        Store.Persons
+            .Where(p => !ExcludeIds.Contains(p.Id))
+            .Where(p => _search.Length == 0 ||
+                        p.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(p => p.PrimaryName.Surname).ThenBy(p => p.PrimaryName.Given)
+            .Take(12);
+
+    private Task Pick(string id) => OnResult.InvokeAsync(id);
+
+    private Task CreateNew()
+    {
+        var person = Store.AddPerson(_newGiven.Trim(), _newSurname.Trim(), _newSex);
+        return OnResult.InvokeAsync(person.Id);
+    }
+
+    private Task Cancel() => OnResult.InvokeAsync(null);
+}

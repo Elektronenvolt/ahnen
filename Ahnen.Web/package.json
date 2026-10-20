@@ -1,0 +1,18 @@
+{
+  "name": "ahnen.web",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild ClientSrc/tree.ts --bundle --format=esm --outfile=wwwroot/js/tree.js --minify && cp node_modules/family-chart/dist/styles/family-chart.css wwwroot/css/family-chart.css",
+    "check": "tsc --noEmit"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "family-chart": "^0.9.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}
