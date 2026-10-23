@@ -1,12 +1,17 @@
 # Ahnen 🌳
 
 A local-first family tree web application built with **.NET 10 Blazor** (Interactive Server) and a
-TypeScript visualization layer based on [family-chart](https://github.com/donatso/family-chart) (MIT, d3).
+TypeScript visualization layer based on [Topola](https://github.com/PeWu/topola) (Apache-2.0, d3).
 
-- **Family tree page** (`/`) — Ancestry-style interactive chart: person cards with photos, marriage
-  lines, zoom/pan (wheel, pinch, toolbar), fit-to-view, automatic re-render on window/panel resize
-  (never overlapping), re-root on any person, and a detail panel that shows all data plus the derived
-  relationship to the root person (e.g. *great-uncle / Urgroßonkel*).
+- **Family tree page** (`/`) — interactive Topola chart: person boxes with photos, spouse pairs,
+  multiple marriages, expand/collapse of branches, animated transitions, zoom/pan (wheel, drag,
+  toolbar), fit-to-view and automatic re-fit on window/panel resize.
+  - Chart types: **Hourglass** (ancestors + descendants, default), **Relatives**, **Ancestors**,
+    **Descendants**. Click a person to center the chart on them; Shift-click only shows details.
+  - Settings (⚙, remembered in the browser): colours (none / by sex / by generation),
+    vertical/horizontal orientation, show IDs, show sex symbols.
+  - Detail panel with all data plus the derived relationship to the root person
+    (e.g. *great-uncle / Urgroßonkel*); set any person as root.
 - **Edit page** (`/edit`) — master-detail editor: searchable person list, names/facts/photo/relationship
   sections, auto-save with undo toast, smart date input, photo upload, and safe delete with impact
   preview.
@@ -138,11 +143,11 @@ Ahnen.Web/
 ├── Models/        GEDCOM 7-aligned domain model + GedcomDate parser
 ├── Services/      FamilyTreeStore (JSON persistence, CRUD, undo, validation),
 │                  RelationshipService (derives kinship labels),
-│                  ChartDataService (family-chart mapping), PhotoService (SkiaSharp)
+│                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
-├── ClientSrc/     tree.ts — thin TypeScript wrapper around family-chart (built with esbuild)
+├── ClientSrc/     tree.ts — TypeScript wrapper around Topola + d3-zoom (built with esbuild)
 ├── Resources/     en/de string resources
 └── seed/          sample family used on first start
 ```
 
-All licenses are free: MIT/ISC (family-chart, d3, esbuild), MIT (SkiaSharp), MIT (.NET).
+All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (esbuild), MIT (SkiaSharp), MIT (.NET).

@@ -119,13 +119,33 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 
 .tree-chart-wrap { flex: 1; display: flex; min-height: 0; position: relative; }
 .tree-chart { flex: 1; min-width: 0; background: var(--bg); }
-.tree-chart svg.main_svg { width: 100%; height: 100%; }
+.tree-chart { overflow: hidden; }
+.tree-chart svg.topola-svg { width: 100%; height: 100%; display: block; cursor: grab; }
+.tree-chart svg.topola-svg:active { cursor: grabbing; }
 
-/* family-chart card polish */
-.f3 .card_cont .card-inner { border-radius: var(--radius); box-shadow: var(--shadow); }
+/* Topola chart theming: dark-grey connectors, softer boxes, app colours by sex */
+.tree-chart .link { stroke: #4b5563; }
+.tree-chart .detailed rect { stroke: #4b5563; stroke-width: 1.5px; rx: 6; }
+.tree-chart .detailed rect.bysex.male { fill: var(--male); }
+.tree-chart .detailed rect.bysex.female { fill: var(--female); }
+.tree-chart .detailed { cursor: pointer; }
 
-/* connectors: dark grey instead of the library's white */
-.f3 path.link { stroke: #4b5563; }
+.chart-types { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.chart-type { border: 0; background: var(--surface); padding: .4rem .75rem; font: inherit; cursor: pointer;
+    border-right: 1px solid var(--border); }
+.chart-type:last-child { border-right: 0; }
+.chart-type.active { background: var(--primary, #2563eb); color: #fff; }
+
+.settings-wrap { position: relative; }
+.settings-popover {
+    position: absolute; right: 0; top: calc(100% + .4rem); z-index: 20; min-width: 230px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: .8rem; display: flex; flex-direction: column; gap: .6rem;
+}
+.settings-popover label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; }
+.settings-popover label.check { flex-direction: row; align-items: center; gap: .5rem; }
+.settings-popover select { padding: .35rem; border-radius: 6px; border: 1px solid var(--border); font: inherit; }
+.btn-icon.active { background: var(--border); }
 
 /* ---------- detail panel ---------- */
 .detail-panel {

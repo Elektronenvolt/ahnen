@@ -151,4 +151,19 @@
   <data name="Name_SaveError" xml:space="preserve"><value>Die Namensänderungen konnten nicht gespeichert werden: {0}</value></data>
   <data name="Name_UndoError" xml:space="preserve"><value>Die Namensänderung konnte nicht rückgängig gemacht werden: {0}</value></data>
   <data name="Name_UndoUnavailable" xml:space="preserve"><value>Es gibt keine gespeicherte Änderung zum Rückgängigmachen.</value></data>
+  <data name="Tree_ChartType" xml:space="preserve"><value>Diagrammtyp</value></data>
+  <data name="Tree_Chart_hourglass" xml:space="preserve"><value>Sanduhr</value></data>
+  <data name="Tree_Chart_relatives" xml:space="preserve"><value>Verwandte</value></data>
+  <data name="Tree_Chart_ancestors" xml:space="preserve"><value>Vorfahren</value></data>
+  <data name="Tree_Chart_descendants" xml:space="preserve"><value>Nachkommen</value></data>
+  <data name="Tree_Settings" xml:space="preserve"><value>Diagramm-Einstellungen</value></data>
+  <data name="Tree_Colors" xml:space="preserve"><value>Farben</value></data>
+  <data name="Tree_Colors_none" xml:space="preserve"><value>Keine</value></data>
+  <data name="Tree_Colors_sex" xml:space="preserve"><value>Nach Geschlecht</value></data>
+  <data name="Tree_Colors_generation" xml:space="preserve"><value>Nach Generation</value></data>
+  <data name="Tree_Orientation" xml:space="preserve"><value>Ausrichtung</value></data>
+  <data name="Tree_Orientation_vertical" xml:space="preserve"><value>Vertikal</value></data>
+  <data name="Tree_Orientation_horizontal" xml:space="preserve"><value>Horizontal</value></data>
+  <data name="Tree_ShowIds" xml:space="preserve"><value>IDs anzeigen</value></data>
+  <data name="Tree_ShowSex" xml:space="preserve"><value>Geschlechtssymbole anzeigen</value></data>
 </root>
