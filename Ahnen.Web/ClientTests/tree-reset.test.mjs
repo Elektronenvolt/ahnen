@@ -68,7 +68,17 @@ const mocks = {
       return behavior;
     }
   `,
+  './tree-minimap': `
+    export class Minimap {
+      setModel() {}
+      setView() {}
+      destroy() {}
+    }
+  `,
   './tree-overview': `
+    export function applyDetailLevel() {}
+    export function markSelected() {}
+    export function overviewModel() { return { bounds: { x: 0, y: 0, width: 100, height: 100 }, rects: [] }; }
     export function renderOverview(data, root, renderer, horizontal) {
       globalThis.treeHarness.overviews.push({ data, root, horizontal });
       return { size: [2000, 1000], animationPromise: Promise.resolve() };
@@ -98,7 +108,7 @@ await build({
 });
 const tree = await import(pathToFileURL(output).href);
 const data = { indis: [{ id: 'root' }, { id: 'child' }, { id: 'unrelated' }], fams: [] };
-const preferences = { chartType: 'descendants', horizontal: true, colors: 'generation', showIds: true, showSex: false, viewMode: '2d' };
+const preferences = { chartType: 'descendants', horizontal: true, colors: 'generation', showIds: true, showSex: false, depth: 0, viewMode: '2d' };
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
 async function initialize() {

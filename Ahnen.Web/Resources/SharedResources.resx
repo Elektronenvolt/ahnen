@@ -166,6 +166,8 @@
   <data name="Tree_Orientation" xml:space="preserve"><value>Orientation</value></data>
   <data name="Tree_Orientation_vertical" xml:space="preserve"><value>Vertical</value></data>
   <data name="Tree_Orientation_horizontal" xml:space="preserve"><value>Horizontal</value></data>
+  <data name="Tree_Depth" xml:space="preserve"><value>Generations shown</value></data>
+  <data name="Tree_Depth_all" xml:space="preserve"><value>All</value></data>
   <data name="Tree_ShowIds" xml:space="preserve"><value>Show IDs</value></data>
   <data name="Tree_ShowSex" xml:space="preserve"><value>Show sex symbols</value></data>
   <data name="Tree_ViewMode" xml:space="preserve"><value>Tree view</value></data>
