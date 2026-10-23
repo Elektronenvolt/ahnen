@@ -19,10 +19,21 @@ and Three.js (MIT).
   - Chart types: **Hourglass** (ancestors + descendants, default), **Relatives**, **Ancestors**,
     **Descendants**. Click a person to center the chart on them; Shift-click only shows details.
   - **Show all people** clears the selection and opens a temporary 2D overview including disconnected
-    families and isolated people. Selecting a person returns to the preferred chart type; Shift-click
+    families and isolated people. Each person appears once; couples sit side by side, a person married
+    several times is drawn once with the spouses on both sides in marriage order, and every marriage has
+    its own junction with right-angle links to the children (married solid, divorced/separated dashed,
+    unmarried dotted, adopted children dashed). Generation lanes carry the same `G+n / G0 / G-n` labels
+    as the 3D view, and separate families are packed side by side to fit the window. Large families are
+    split into blocks that repeat the parents as faint dotted *ghost* cards (also used when a marriage
+    joins two branches). Zoomed out, cards turn into readable chips and then tiles; hover a person to
+    highlight their parents, partners and children; the minimap (bottom left) shows the visible area
+    and pans on click/drag. Selecting a person returns to the preferred chart type; Shift-click
     still opens details without changing the view. In 3D, the button clears relationship highlighting.
     Zoom, display settings, and the stored root are unchanged. Use **Fit to view** separately to fit
     the whole overview on screen.
+  - In the person charts the focus person is outlined in every repeated card (once per marriage) and
+    ended partnerships are drawn dashed; **Generations shown** (⚙) limits ancestors and descendants
+    around the focus person.
   - Settings (⚙, remembered in the browser): colours (none / by sex / by generation),
     vertical/horizontal orientation, show IDs, show sex symbols.
   - Detail panel with all data plus the derived relationship to the root person
@@ -59,6 +70,19 @@ Ahnen.Web/data/
 The location can be changed with the `DataDirectory` setting in `appsettings.json` or the
 `FAMILYTREE_DATA_DIR` environment variable. Writes are atomic (temp file + rename) and every save
 first keeps the previous version as `.bak`.
+
+### Large sample tree
+
+`Ahnen.Web/seed/sample-200/familytree.json` is a deterministic 200-person tree (1–6 children per
+couple, single parents, people married several times, childless people, adopted children, marriages
+between branches, disconnected families) for trying out the overview. Use it without touching your own
+data:
+
+```bash
+mkdir -p /tmp/ahnen-sample && cp Ahnen.Web/seed/sample-200/familytree.json /tmp/ahnen-sample/
+FAMILYTREE_DATA_DIR=/tmp/ahnen-sample dotnet run --project Ahnen.Web
+# regenerate (seed and size are optional): node Ahnen.Web/tools/generate-sample-tree.mjs <out> 42 200
+```
 
 Photos are re-encoded on upload (strips EXIF/payloads), downscaled to max 1600 px and stored as
 webp together with a 160×160 thumbnail. The JSON only stores the relative path.
@@ -163,8 +187,11 @@ Ahnen.Web/
 │                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
 ├── ClientSrc/     tree.ts — Topola + d3-zoom, tree3d.ts — Three.js renderer,
-│                  tree3d-layout.ts — pure family graph layout and neighborhood selection (esbuild)
+│                  tree3d-layout.ts — pure family graph layout and neighborhood selection,
+│                  tree-overview-layout.ts — pure family-unit layout of the 2D overview,
+│                  tree-overview.ts / tree-minimap.ts — overview rendering, minimap (esbuild)
 ├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
+├── tools/         generate-sample-tree.mjs — deterministic sample data generator
 ├── Resources/     en/de string resources
 └── seed/          sample family used on first start
 ```

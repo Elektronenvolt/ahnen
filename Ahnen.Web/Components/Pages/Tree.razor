@@ -66,6 +66,15 @@
                                 <option value="h">@L["Tree_Orientation_horizontal"]</option>
                             </select>
                         </label>
+                        <label>@L["Tree_Depth"]
+                            <select value="@_opts.Depth" @onchange="OnDepthChanged">
+                                <option value="0">@L["Tree_Depth_all"]</option>
+                                @foreach (var n in new[] { 1, 2, 3, 4 })
+                                {
+                                    <option value="@n">@n</option>
+                                }
+                            </select>
+                        </label>
                         <label class="check"><input type="checkbox" checked="@_opts.ShowIds"
                                                     @onchange="e => UpdateAsync(o => o.ShowIds = e.Value is true)" /> @L["Tree_ShowIds"]</label>
                         <label class="check"><input type="checkbox" checked="@_opts.ShowSex"
@@ -201,6 +210,7 @@
         public bool Horizontal { get; set; }
         public bool ShowIds { get; set; }
         public bool ShowSex { get; set; } = true;
+        public int Depth { get; set; }
         public string ViewMode { get; set; } = "2d";
     }
 
@@ -400,6 +410,9 @@
     private Task OnColorsChanged(ChangeEventArgs e) => UpdateAsync(o => o.Colors = e.Value?.ToString() ?? "sex");
 
     private Task OnOrientationChanged(ChangeEventArgs e) => UpdateAsync(o => o.Horizontal = e.Value?.ToString() == "h");
+
+    private Task OnDepthChanged(ChangeEventArgs e) =>
+        UpdateAsync(o => o.Depth = int.TryParse(e.Value?.ToString(), out var depth) ? depth : 0);
 
     private async Task UpdateAsync(Action<ChartOptions> change)
     {

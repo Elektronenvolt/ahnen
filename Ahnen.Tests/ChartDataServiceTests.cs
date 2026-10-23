@@ -134,6 +134,45 @@ public class ChartDataServiceTests : IDisposable
     }
 
     [Fact]
+    public void Family_status_marriage_year_and_non_birth_pedigree_are_exposed()
+    {
+        var dad = Store.AddPerson("Dad", "X", Sex.M);
+        var mum = Store.AddPerson("Mum", "X", Sex.F);
+        var kid = Store.AddPerson("Kid", "X", Sex.F);
+        var adopted = Store.AddPerson("Adopted", "X", Sex.M);
+        var family = Store.AddPartner(dad.Id, mum.Id);
+        Store.AddChild(dad.Id, kid.Id, familyId: family.Id);
+        Store.AddChild(dad.Id, adopted.Id, Pedigree.ADOPTED, family.Id);
+        family = Store.GetFamily(family.Id)!;
+        FamilyStatus.ApplyStatus(family, "DIV");
+        family.Marriage!.Date = "5 MAY 1980";
+        Store.UpdateFamily(family);
+
+        var fam = Build().Fams.Single(f => f.Id == family.Id);
+        Assert.Equal("DIV", fam.Status);
+        Assert.Equal(1980, fam.MarriageYear);
+        Assert.Equal(new Dictionary<string, string> { [adopted.Id] = "ADOPTED" }, fam.Pedigrees);
+    }
+
+    [Fact]
+    public void Birth_year_and_deceased_flag_are_exposed()
+    {
+        var person = Store.AddPerson("Anna", "Alt", Sex.F);
+        person.GetOrAddEvent(IndividualEventType.BIRT).Date = "3 MAR 1901";
+        person.GetOrAddEvent(IndividualEventType.DEAT);
+        Store.UpdatePersonFacts(person);
+        var other = Store.AddPerson("Bob", "Alt", Sex.M);
+
+        var data = Build();
+        var indi = data.Indis.Single(i => i.Id == person.Id);
+        Assert.Equal(1901, indi.BirthYear);
+        Assert.True(indi.Deceased);
+        var living = data.Indis.Single(i => i.Id == other.Id);
+        Assert.Null(living.BirthYear);
+        Assert.Null(living.Deceased);
+    }
+
+    [Fact]
     public void Maiden_name_comes_from_a_different_birth_name()
     {
         var person = Store.AddPerson("Eva", "Meier", Sex.F);

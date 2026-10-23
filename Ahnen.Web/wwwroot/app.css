@@ -158,6 +158,62 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 .tree-chart .detailed rect.bysex.male { fill: var(--male); }
 .tree-chart .detailed rect.bysex.female { fill: var(--female); }
 .tree-chart .detailed { cursor: pointer; }
+.tree-chart g.indi.focus rect.background { stroke: #2563eb; stroke-width: 3.5px; }
+.tree-chart g.family.ended rect { stroke: #b45309; stroke-dasharray: 3 2; }
+.tree-chart g.family.ended text { fill: #b45309; }
+
+/* Overview ("Show all people"): lanes, family links, chips and semantic zoom */
+.tree-chart .overview-lane rect { fill: #eef2f8; }
+.tree-chart .overview-lane rect.odd { fill: #e6ebf3; }
+.tree-chart .overview-lane-label { font: 600 26px system-ui, sans-serif; fill: #94a3b8; pointer-events: none; }
+.tree-chart .overview-link { stroke: #4b5563; stroke-width: 2px; stroke-linejoin: round; }
+.tree-chart .overview-link.kind-spouse { stroke-width: 3px; }
+.tree-chart .overview-link.status-DIV, .tree-chart .overview-link.status-SEP,
+.tree-chart .overview-link.status-ANUL, .tree-chart .overview-link.status-DIVF { stroke: #b45309; stroke-dasharray: 8 5; }
+.tree-chart .overview-link.status-NONE.kind-spouse, .tree-chart .overview-link.status-ENGA.kind-spouse {
+    stroke-dasharray: 2 5; stroke-linecap: round; }
+.tree-chart .overview-link.adopted { stroke-dasharray: 6 4; }
+.tree-chart .overview-link.kind-ghost { stroke: #94a3b8; stroke-width: 1.5px; stroke-dasharray: 2 6; opacity: .45; }
+.tree-chart .overview-junction { fill: #4b5563; stroke: #fff; stroke-width: 1.5px; }
+.tree-chart .overview-junction.status-DIV, .tree-chart .overview-junction.status-SEP { fill: #b45309; }
+.tree-chart .overview-junction.continued { fill: #fff; stroke: #4b5563; stroke-width: 2px; }
+.tree-chart g.node.ghost { opacity: .55; }
+.tree-chart g.node.selected rect, .tree-chart g.overview-chip.selected rect { stroke: #2563eb; stroke-width: 4px; }
+.tree-chart g.node.root rect, .tree-chart g.overview-chip.root rect { stroke-width: 3px; stroke: #1d4ed8; }
+.tree-chart .focusing g.node, .tree-chart .focusing g.overview-chip, .tree-chart .focusing .overview-link,
+.tree-chart .focusing .overview-junction { opacity: .18; }
+.tree-chart .focusing g.node.related, .tree-chart .focusing g.overview-chip.related,
+.tree-chart .focusing .overview-link.related { opacity: 1; }
+.tree-chart .focusing .overview-link.related { stroke: #2563eb; }
+
+.overview-chip { display: none; cursor: pointer; }
+.overview-chip rect { stroke: #4b5563; stroke-width: 2px; fill: #e5e7eb; }
+.overview-chip.male rect { fill: var(--male); }
+.overview-chip.female rect { fill: var(--female); }
+.overview-chip.ghost { opacity: .55; }
+.overview-chip text { text-anchor: middle; pointer-events: none; fill: #111827; }
+.overview-chip .chip-given, .overview-chip .chip-surname { font: 700 24px system-ui, sans-serif; }
+.overview-chip .chip-years { font: 18px system-ui, sans-serif; fill: #4b5563; }
+.overview-chip .tile-initial { display: none; font: 700 72px system-ui, sans-serif; }
+.overview-mode.lod-chip g.node, .overview-mode.lod-tile g.node { display: none; }
+.overview-mode.lod-chip .overview-chip, .overview-mode.lod-tile .overview-chip { display: inline; }
+.overview-mode.lod-tile .overview-chip text:not(.tile-initial) { display: none; }
+.overview-mode.lod-tile .overview-chip .tile-initial { display: inline; }
+.overview-mode.lod-tile .overview-link { stroke-width: 4px; }
+.overview-mode.lod-tile .overview-lane-label { font-size: 48px; }
+
+.tree-chart { position: relative; }
+.overview-minimap {
+    position: absolute; left: .8rem; bottom: .8rem; z-index: 5; background: rgba(255, 255, 255, .92);
+    border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 8px rgba(15, 23, 42, .15);
+    padding: 4px; touch-action: none; }
+.overview-minimap[hidden] { display: none; }
+.overview-minimap svg { display: block; cursor: pointer; }
+.minimap-card { fill: #94a3b8; }
+.minimap-card.male { fill: var(--male-strong); }
+.minimap-card.female { fill: var(--female-strong); }
+.minimap-card.ghost { opacity: .4; }
+.minimap-view { fill: rgba(37, 99, 235, .12); stroke: #2563eb; stroke-width: 1.5px; }
 
 .chart-types { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .chart-type { border: 0; background: var(--surface); padding: .4rem .75rem; font: inherit; cursor: pointer;

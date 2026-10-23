@@ -32,15 +32,14 @@ const ordinary = data(['grandparent', 'parent', 'partner', 'child', 'unrelated',
 ]);
 
 function assertCoverage(input, horizontal) {
-  const { nodes, families } = overviewNodes(input, input.indis[0].id, renderer, horizontal);
-  assert.deepEqual(nodes.map(node => node.data.indi.id).sort(), input.indis.map(person => person.id).sort());
+  const { nodes, layout } = overviewNodes(input, input.indis[0].id, renderer, horizontal);
+  const real = nodes.filter(node => !layout.cards.find(card => card.id === node.id).ghost);
+  assert.deepEqual(real.map(node => node.data.indi.id).sort(), input.indis.map(person => person.id).sort());
   const ids = new Set(nodes.map(node => node.id));
-  assert.equal(ids.size, input.indis.length);
-  for (const family of families) {
-    for (const id of [...family.partners, ...family.children]) assert(ids.has(id));
-    const source = input.fams.find(item => item.id === family.id);
-    assert.deepEqual(family.partners, [source.husb, source.wife].filter(Boolean));
-    assert.deepEqual(family.children, source.children);
+  assert.equal(ids.size, nodes.length, 'card ids are unique');
+  for (const link of layout.links.filter(item => item.kind === 'child')) {
+    assert(link.persons.every(id => input.indis.some(person => person.id === id)));
+    assert(link.points.every(point => point.every(Number.isFinite)));
   }
   for (const node of nodes) {
     assert(Number.isFinite(node.x) && Number.isFinite(node.y));

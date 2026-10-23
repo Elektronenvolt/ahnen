@@ -15,7 +15,10 @@ import { select, type Selection } from 'd3-selection';
 import 'd3-transition';
 import { zoom, zoomIdentity, type ZoomBehavior } from 'd3-zoom';
 import { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d, zoom3d } from './tree3d';
-import { renderOverview } from './tree-overview';
+import { applyDetailLevel, markSelected, overviewModel, renderOverview } from './tree-overview';
+import { Minimap, type MinimapModel } from './tree-minimap';
+import { limitDepth } from './tree-depth';
+import type { OverviewFam } from './tree-overview-layout';
 
 export type ChartKind = 'hourglass' | 'relatives' | 'ancestors' | 'descendants';
 export type ColorMode = 'none' | 'sex' | 'generation';
@@ -26,6 +29,8 @@ export interface TreeOptions {
   horizontal: boolean;
   showIds: boolean;
   showSex: boolean;
+  /** Generations of ancestors/descendants drawn around the focus person; 0 shows all. */
+  depth: number;
   viewMode: '2d' | '3d';
 }
 
@@ -40,6 +45,7 @@ const DEFAULTS: TreeOptions = {
   horizontal: false,
   showIds: false,
   showSex: true,
+  depth: 0,
   viewMode: '2d'
 };
 /** Below this zoom level an automatic fit centers on the focused person instead of shrinking further. */
@@ -77,6 +83,10 @@ let renderToken = 0;
 let viewMode: '2d' | '3d' = '2d';
 let overview = false;
 let rootId: string | null = null;
+/** Person opened with Shift-click while the overview is shown. */
+let overviewSelected: string | null = null;
+let minimap: Minimap | null = null;
+let minimapModel: MinimapModel | null = null;
 
 function loadOptions(): TreeOptions {
   try {
@@ -119,6 +129,10 @@ function resolveFocus(preferred: string | null): string | null {
 
 function onIndiClick(info: IndiInfo): void {
   const shift = !!info.modifiers?.shiftKey;
+  if (overview && shift) {
+    overviewSelected = info.id;
+    if (chartSvgEl) markSelected(chartSvgEl, info.id);
+  }
   void dotnet?.invokeMethodAsync('OnPersonClicked', info.id, !shift);
 }
 
@@ -150,16 +164,73 @@ async function render(): Promise<void> {
     ? renderOverview(json, rootId, new DetailedRenderer({
       data: new JsonDataProvider(json), colors: COLORS[options.colors],
       horizontal: options.horizontal, locale, animate: false, indiCallback: onIndiClick
-    }), options.horizontal)
-    : handle.render({ startIndi: focusId });
+    }), options.horizontal, {
+      aspect: viewportAspect(), selectedId: overviewSelected, scale: currentTransform().k, onClick: onIndiClick
+    })
+    : renderPersonChart(handle, json, focusId);
   chartSize = info.size;
   await info.animationPromise.catch(() => undefined);
   if (token !== renderToken) return;
+  decorateChart();
+  syncMinimap();
+}
+
+function renderPersonChart(chart: ChartHandle, data: JsonGedcomData, startIndi: string) {
+  if (options.depth > 0) chart.setData(limitDepth(data, startIndi, options.depth));
+  return chart.render({ startIndi });
+}
+
+/** Marks the focus person (in every repeated card) and divorced/separated partnerships. */
+function decorateChart(): void {
+  if (!chartSvgEl || !json || overview) return;
+  const status = new Map((json.fams as OverviewFam[]).map(family => [family.id, family.status]));
+  const ended = new Set(['DIV', 'SEP', 'ANUL', 'DIVF']);
+  select(chartSvgEl).selectAll<SVGGElement, { indi?: { id: string } }>('g.indi').each(function (d) {
+    this.classList?.toggle('focus', !!focusId && d?.indi?.id === focusId);
+  });
+  select(chartSvgEl).selectAll<SVGGElement, { data?: { id?: string } }>('g.family').each(function (d) {
+    this.classList?.toggle('ended', ended.has(status.get(d?.data?.id ?? '') ?? ''));
+  });
 }
 
 function viewport(): { w: number; h: number } {
   const rect = outerSvg!.node()!.getBoundingClientRect();
   return { w: rect.width, h: rect.height };
+}
+
+function viewportAspect(): number {
+  const { w, h } = viewport();
+  return w > 0 && h > 0 ? w / h : 16 / 9;
+}
+
+/** Keeps the minimap in step with the overview and the visible area. */
+function syncMinimap(): void {
+  if (!container || !outerSvg) return;
+  const model = overview && viewMode === '2d' ? overviewModel() : null;
+  if (!model) {
+    minimap?.setModel(null);
+    minimapModel = null;
+    return;
+  }
+  minimap ??= new Minimap(container, panToLayoutPoint, locale === 'de' ? 'Übersichtskarte' : 'Overview map');
+  if (minimapModel !== model) {
+    minimap.setModel(model);
+    minimapModel = model;
+  }
+  const { w, h } = viewport();
+  const t = currentTransform();
+  minimap.setView({
+    x: -t.x / t.k + model.bounds.x, y: -t.y / t.k + model.bounds.y, width: w / t.k, height: h / t.k
+  });
+}
+
+function panToLayoutPoint(x: number, y: number): void {
+  const model = overviewModel();
+  if (!model) return;
+  const { w, h } = viewport();
+  const t = currentTransform();
+  userAdjusted = true;
+  transitionTo(w / 2 - (x - model.bounds.x) * t.k, h / 2 - (y - model.bounds.y) * t.k, t.k, 0);
 }
 
 function transitionTo(x: number, y: number, k: number, ms: number): void {
@@ -224,6 +295,7 @@ function focus(personId: string): void {
   const wasOverview = overview;
   if (overview) {
     overview = false;
+    overviewSelected = null;
     clearChart();
     buildHandle();
   }
@@ -271,6 +343,10 @@ export function init(
     .scaleExtent([0.05, 3])
     .on('zoom', ev => {
       zoomLayer!.attr('transform', ev.transform.toString());
+      if (overview) {
+        applyDetailLevel(chartSvgEl, ev.transform.k);
+        syncMinimap();
+      }
       if (ev.sourceEvent) userAdjusted = true;
     });
   outerSvg.call(zoomBehavior).on('dblclick.zoom', null);
@@ -330,12 +406,16 @@ export function setMain(personId: string): void {
 
 function clearChart(): void {
   if (!chartSvgEl) return;
+  chartSvgEl.classList?.remove('overview-mode', 'lod-chip', 'lod-tile');
+  minimap?.setModel(null);
+  minimapModel = null;
   select(chartSvgEl).selectAll('*').interrupt().remove();
 }
 
 /** Clears the person filter without changing preferences, root, or the zoom transform. */
 export async function resetSelection(preferredRoot: string | null): Promise<void> {
   overview = true;
+  overviewSelected = null;
   rootId = preferredRoot;
   userAdjusted = true;
   renderToken++;
@@ -366,6 +446,7 @@ export function setViewMode(mode: '2d' | '3d'): void {
   viewMode = mode;
   options.viewMode = mode;
   saveOptions();
+  syncMinimap();
 }
 
 export async function refresh2d(): Promise<void> {
@@ -376,6 +457,9 @@ export { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d };
 
 export function destroy(): void {
   destroy3d();
+  minimap?.destroy();
+  minimap = null;
+  minimapModel = null;
   resizeObserver?.disconnect();
   resizeObserver = null;
   renderToken++;
@@ -389,6 +473,7 @@ export function destroy(): void {
   handle = null;
   json = null;
   overview = false;
+  overviewSelected = null;
   rootId = null;
   focusId = null;
   dotnet = null;
