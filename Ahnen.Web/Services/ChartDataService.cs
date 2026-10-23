@@ -22,14 +22,19 @@ public class ChartDataService(FamilyTreeStore store)
         List<string> Fams,
         TopolaEvent? Birth,
         TopolaEvent? Death,
-        List<TopolaImage>? Images);
+        List<TopolaImage>? Images,
+        int? BirthYear = null,
+        bool? Deceased = null);
 
     public record TopolaFam(
         string Id,
         string? Husb,
         string? Wife,
         List<string> Children,
-        TopolaEvent? Marriage);
+        TopolaEvent? Marriage,
+        string Status = "NONE",
+        int? MarriageYear = null,
+        Dictionary<string, string>? Pedigrees = null);
 
     public record TopolaData(List<TopolaIndi> Indis, List<TopolaFam> Fams);
 
@@ -67,7 +72,9 @@ public class ChartDataService(FamilyTreeStore store)
                 families.Where(f => f.PartnerIds.Contains(p.Id)).Select(f => f.Id).ToList(),
                 ToEvent(p.Birth, culture, confirmed: false),
                 ToEvent(p.Death, culture, confirmed: true),
-                p.PhotoFile is { } photo ? [new TopolaImage($"/media/{ThumbPath(photo)}")] : null);
+                p.PhotoFile is { } photo ? [new TopolaImage($"/media/{ThumbPath(photo)}")] : null,
+                GedcomDate.Year(p.Birth?.Date),
+                p.IsDeceased ? true : null);
         }).ToList();
 
         var fams = families.Select(f =>
@@ -75,7 +82,11 @@ public class ChartDataService(FamilyTreeStore store)
             var (husb, wife) = AssignPartners(f, byId);
             var children = f.ChildRefs.Select(c => c.PersonId).Where(byId.ContainsKey).ToList();
             var marriage = f.Marriage is { } m ? ToEvent(m.Date, m.Place, culture, confirmed: false) : null;
-            return new TopolaFam(f.Id, husb, wife, children, marriage);
+            var pedigrees = f.ChildRefs
+                .Where(c => c.Pedigree != Pedigree.BIRTH && byId.ContainsKey(c.PersonId))
+                .ToDictionary(c => c.PersonId, c => c.Pedigree.ToString());
+            return new TopolaFam(f.Id, husb, wife, children, marriage, FamilyStatus.GetStatus(f),
+                GedcomDate.Year(f.Marriage?.Date), pedigrees.Count > 0 ? pedigrees : null);
         }).ToList();
 
         return new TopolaData(indis, fams);

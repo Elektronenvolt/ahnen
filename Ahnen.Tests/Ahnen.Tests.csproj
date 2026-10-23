@@ -19,6 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\Ahnen.Web\seed\sample-200\familytree.json" Link="sample-200\familytree.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Ahnen.Web\Ahnen.Web.csproj" />
   </ItemGroup>
 
