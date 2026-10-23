@@ -14,6 +14,7 @@ import {
 import { select, type Selection } from 'd3-selection';
 import 'd3-transition';
 import { zoom, zoomIdentity, type ZoomBehavior } from 'd3-zoom';
+import { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d, zoom3d } from './tree3d';
 
 export type ChartKind = 'hourglass' | 'relatives' | 'ancestors' | 'descendants';
 export type ColorMode = 'none' | 'sex' | 'generation';
@@ -24,6 +25,7 @@ export interface TreeOptions {
   horizontal: boolean;
   showIds: boolean;
   showSex: boolean;
+  viewMode: '2d' | '3d';
 }
 
 interface DotNetRef {
@@ -36,7 +38,8 @@ const DEFAULTS: TreeOptions = {
   colors: 'sex',
   horizontal: false,
   showIds: false,
-  showSex: true
+  showSex: true,
+  viewMode: '2d'
 };
 /** Below this zoom level an automatic fit centers on the focused person instead of shrinking further. */
 const MIN_AUTO_SCALE = 0.5;
@@ -70,11 +73,15 @@ let chartSize: [number, number] = [0, 0];
 /** True once the user pans/zooms manually, which suppresses automatic re-fitting on resize. */
 let userAdjusted = false;
 let renderToken = 0;
+let viewMode: '2d' | '3d' = '2d';
 
 function loadOptions(): TreeOptions {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<TreeOptions>) };
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<TreeOptions>;
+      return { ...DEFAULTS, ...saved, viewMode: saved.viewMode === '3d' ? '3d' : '2d' };
+    }
   } catch {
     /* ignore corrupt or unavailable storage */
   }
@@ -231,6 +238,7 @@ export function init(
   dotnet = dotnetRef;
   locale = uiLocale;
   options = loadOptions();
+  viewMode = options.viewMode;
   json = prepare(data);
   focusId = resolveFocus(mainId);
 
@@ -289,7 +297,8 @@ export function setOptions(next: TreeOptions): TreeOptions {
 
 /** Re-roots the tree on the given person. */
 export function setMain(personId: string): void {
-  focus(personId);
+  if (viewMode === '3d') focus3d(personId);
+  else focus(personId);
 }
 
 export function fit(): void {
@@ -298,13 +307,26 @@ export function fit(): void {
 }
 
 /** Zooms by one step (dir > 0 zooms in) around the viewport center. */
-export function zoomBy(dir: number): void {
+export function zoomBy(dir: number, mode = viewMode): void {
+  if (mode === '3d') {
+    zoom3d(dir);
+    return;
+  }
   if (!outerSvg || !zoomBehavior) return;
   userAdjusted = true;
   outerSvg.transition().duration(200).call(zoomBehavior.scaleBy, dir > 0 ? 1.3 : 1 / 1.3);
 }
 
+export function setViewMode(mode: '2d' | '3d'): void {
+  viewMode = mode;
+  options.viewMode = mode;
+  saveOptions();
+}
+
+export { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d };
+
 export function destroy(): void {
+  destroy3d();
   resizeObserver?.disconnect();
   resizeObserver = null;
   renderToken++;
@@ -318,4 +340,5 @@ export function destroy(): void {
   handle = null;
   json = null;
   dotnet = null;
+  viewMode = '2d';
 }

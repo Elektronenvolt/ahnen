@@ -23,40 +23,52 @@
                 <option value="@PersonOption(p)"></option>
             }
         </datalist>
-        <div class="chart-types" role="group" aria-label="@L["Tree_ChartType"]">
-            @foreach (var kind in ChartKinds)
-            {
-                <button class="chart-type @(_opts.ChartType == kind ? "active" : "")"
-                        @onclick="() => SetChartTypeAsync(kind)">@L[$"Tree_Chart_{kind}"]</button>
-            }
+        <div class="chart-types view-modes" role="group" aria-label="@L["Tree_ViewMode"]">
+            <button class="chart-type @(_opts.ViewMode == "2d" ? "active" : "")"
+                    @onclick='() => SetViewModeAsync("2d")'>@L["Tree_View2D"]</button>
+            <button class="chart-type @(_opts.ViewMode == "3d" ? "active" : "")"
+                    @onclick='() => SetViewModeAsync("3d")'>@L["Tree_View3D"]</button>
         </div>
+        @if (_opts.ViewMode == "2d")
+        {
+            <div class="chart-types" role="group" aria-label="@L["Tree_ChartType"]">
+                @foreach (var kind in ChartKinds)
+                {
+                    <button class="chart-type @(_opts.ChartType == kind ? "active" : "")"
+                            @onclick="() => SetChartTypeAsync(kind)">@L[$"Tree_Chart_{kind}"]</button>
+                }
+            </div>
+        }
         <div class="tree-toolbar-spacer"></div>
-        <div class="settings-wrap">
-            <button class="btn-icon @(_settingsOpen ? "active" : "")" title="@L["Tree_Settings"]"
-                    @onclick="() => _settingsOpen = !_settingsOpen">⚙</button>
-            @if (_settingsOpen)
-            {
-                <div class="settings-popover">
-                    <label>@L["Tree_Colors"]
-                        <select value="@_opts.Colors" @onchange="OnColorsChanged">
-                            <option value="none">@L["Tree_Colors_none"]</option>
-                            <option value="sex">@L["Tree_Colors_sex"]</option>
-                            <option value="generation">@L["Tree_Colors_generation"]</option>
-                        </select>
-                    </label>
-                    <label>@L["Tree_Orientation"]
-                        <select value="@(_opts.Horizontal ? "h" : "v")" @onchange="OnOrientationChanged">
-                            <option value="v">@L["Tree_Orientation_vertical"]</option>
-                            <option value="h">@L["Tree_Orientation_horizontal"]</option>
-                        </select>
-                    </label>
-                    <label class="check"><input type="checkbox" checked="@_opts.ShowIds"
-                                                @onchange="e => UpdateAsync(o => o.ShowIds = e.Value is true)" /> @L["Tree_ShowIds"]</label>
-                    <label class="check"><input type="checkbox" checked="@_opts.ShowSex"
-                                                @onchange="e => UpdateAsync(o => o.ShowSex = e.Value is true)" /> @L["Tree_ShowSex"]</label>
-                </div>
-            }
-        </div>
+        @if (_opts.ViewMode == "2d")
+        {
+            <div class="settings-wrap">
+                <button class="btn-icon @(_settingsOpen ? "active" : "")" title="@L["Tree_Settings"]"
+                        @onclick="() => _settingsOpen = !_settingsOpen">⚙</button>
+                @if (_settingsOpen)
+                {
+                    <div class="settings-popover">
+                        <label>@L["Tree_Colors"]
+                            <select value="@_opts.Colors" @onchange="OnColorsChanged">
+                                <option value="none">@L["Tree_Colors_none"]</option>
+                                <option value="sex">@L["Tree_Colors_sex"]</option>
+                                <option value="generation">@L["Tree_Colors_generation"]</option>
+                            </select>
+                        </label>
+                        <label>@L["Tree_Orientation"]
+                            <select value="@(_opts.Horizontal ? "h" : "v")" @onchange="OnOrientationChanged">
+                                <option value="v">@L["Tree_Orientation_vertical"]</option>
+                                <option value="h">@L["Tree_Orientation_horizontal"]</option>
+                            </select>
+                        </label>
+                        <label class="check"><input type="checkbox" checked="@_opts.ShowIds"
+                                                    @onchange="e => UpdateAsync(o => o.ShowIds = e.Value is true)" /> @L["Tree_ShowIds"]</label>
+                        <label class="check"><input type="checkbox" checked="@_opts.ShowSex"
+                                                    @onchange="e => UpdateAsync(o => o.ShowSex = e.Value is true)" /> @L["Tree_ShowSex"]</label>
+                    </div>
+                }
+            </div>
+        }
         <button class="btn-icon" title="@L["Tree_ZoomIn"]" @onclick="() => ZoomAsync(1)">＋</button>
         <button class="btn-icon" title="@L["Tree_ZoomOut"]" @onclick="() => ZoomAsync(-1)">－</button>
         <button class="btn-icon" title="@L["Tree_Fit"]" @onclick="FitAsync">⤢</button>
@@ -72,7 +84,20 @@
     else
     {
         <div class="tree-chart-wrap @(_selected is not null ? "with-panel" : "")">
-            <div id="familyChart" class="tree-chart"></div>
+            <div id="familyChart" class="tree-chart" style="display: @(_opts.ViewMode == "2d" ? "block" : "none")"></div>
+            <div id="familyChart3d" class="tree-chart-3d" style="display: @(_opts.ViewMode == "3d" ? "block" : "none")"></div>
+            <div class="tree3d-overlays" hidden="@(_opts.ViewMode != "3d")">
+                <div id="familyChart3dStatus" class="tree3d-status" role="status" hidden></div>
+                <div id="familyChart3dTooltip" class="tree3d-tooltip" role="tooltip" hidden></div>
+                <div id="familyChart3dSummary" class="tree3d-summary" aria-live="polite" hidden></div>
+                <aside class="tree3d-legend" aria-label="@L["Tree_3dLegend"]">
+                    <strong>@L["Tree_3dLegend"]</strong>
+                    <div>@L["Tree_3dLegendLevels"]</div>
+                    <div>@L["Tree_3dLegendColors"]</div>
+                    <div>@L["Tree_3dLegendLinks"]</div>
+                    <div>@L["Tree_3dLegendFocus"]</div>
+                </aside>
+            </div>
 
             @if (_selected is not null)
             {
@@ -158,6 +183,7 @@
     private bool _chartInitialized;
     private bool _settingsOpen;
     private ChartOptions _opts = new();
+    private string? _pendingViewMode;
 
     private static readonly string[] ChartKinds = ["hourglass", "relatives", "ancestors", "descendants"];
 
@@ -169,6 +195,7 @@
         public bool Horizontal { get; set; }
         public bool ShowIds { get; set; }
         public bool ShowSex { get; set; } = true;
+        public string ViewMode { get; set; } = "2d";
     }
 
     protected override void OnInitialized()
@@ -181,14 +208,24 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _persons.Count > 0)
+        if (!_chartInitialized && _persons.Count > 0)
         {
-            _selfRef = DotNetObjectReference.Create(this);
-            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/tree.js");
+            _selfRef ??= DotNetObjectReference.Create(this);
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/tree.js");
             _opts = await _module.InvokeAsync<ChartOptions>("init", "familyChart", ChartData.Build(),
                 _selected?.Id ?? Store.RootPersonId, _selfRef, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
             _chartInitialized = true;
+            if (_opts.ViewMode == "3d")
+                _pendingViewMode = "3d";
             StateHasChanged();
+        }
+        else if (_pendingViewMode is { } mode && _module is not null)
+        {
+            _pendingViewMode = null;
+            if (mode == "3d")
+                await Init3dAsync();
+            else
+                await _module.InvokeVoidAsync("destroy3d");
         }
     }
 
@@ -200,7 +237,20 @@
                 SelectPersonCore(_selected.Id);
             StateHasChanged();
             if (_chartInitialized && _module is not null)
-                await _module.InvokeVoidAsync("updateData", ChartData.Build(), Store.RootPersonId);
+            {
+                if (_persons.Count == 0)
+                {
+                    await _module.InvokeVoidAsync("destroy");
+                    _chartInitialized = false;
+                }
+                else
+                {
+                    var data = ChartData.Build();
+                    await _module.InvokeVoidAsync("updateData", data, Store.RootPersonId);
+                    if (_opts.ViewMode == "3d")
+                        await _module.InvokeVoidAsync("update3d", data, Store.RootPersonId);
+                }
+            }
         });
 
     [JSInvokable]
@@ -246,7 +296,12 @@
         }
     }
 
-    private void ClosePanel() => _selected = null;
+    private async Task ClosePanel()
+    {
+        _selected = null;
+        if (_module is not null && _opts.ViewMode == "3d")
+            await _module.InvokeVoidAsync("clearSelection3d");
+    }
 
     private async Task SetAsRootAsync()
     {
@@ -257,6 +312,57 @@
     }
 
     private async Task SetChartTypeAsync(string kind) => await UpdateAsync(o => o.ChartType = kind);
+
+    private async Task SetViewModeAsync(string mode)
+    {
+        if (mode is not ("2d" or "3d") || _opts.ViewMode == mode)
+            return;
+        _opts.ViewMode = mode;
+        _settingsOpen = false;
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("setViewMode", mode);
+            _pendingViewMode = mode;
+        }
+    }
+
+    private async Task Init3dAsync()
+    {
+        if (_module is null || _selfRef is null)
+            return;
+        await _module.InvokeVoidAsync("init3d", new
+        {
+            containerId = "familyChart3d",
+            statusId = "familyChart3dStatus",
+            tooltipId = "familyChart3dTooltip",
+            summaryId = "familyChart3dSummary",
+            data = ChartData.Build(),
+            rootId = Store.RootPersonId,
+            selectedId = _selected?.Id,
+            callback = _selfRef,
+            locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
+            labels = new
+            {
+                unavailable = L["Tree_3dUnavailable"].Value,
+                canvas = L["Tree_3dCanvasLabel"].Value,
+                person = L["Tree_3dFigureLabel"].Value,
+                root = L["Tree_3dRoot"].Value,
+                rootGeneration = L["Tree_3dRootGeneration"].Value,
+                above = L["Tree_3dAbove"].Value,
+                below = L["Tree_3dBelow"].Value,
+                separate = L["Tree_3dSeparate"].Value,
+                cycle = L["Tree_3dCycle"].Value,
+                conflictingLevels = L["Tree_3dConflictingLevels"].Value,
+                selected = L["Tree_3dSelected"].Value,
+                preview = L["Tree_3dPreview"].Value,
+                parent = L["Detail_Parents"].Value,
+                partner = L["Detail_Partners"].Value,
+                child = L["Detail_Children"].Value,
+                self = L["Tree_3dSelf"].Value,
+                noRelations = L["Tree_3dNoRelations"].Value
+            }
+        });
+    }
 
     private Task OnColorsChanged(ChangeEventArgs e) => UpdateAsync(o => o.Colors = e.Value?.ToString() ?? "sex");
 
@@ -271,12 +377,13 @@
 
     private async Task ZoomAsync(int dir)
     {
-        if (_module is not null) await _module.InvokeVoidAsync("zoomBy", dir);
+        if (_module is not null) await _module.InvokeVoidAsync("zoomBy", dir, _opts.ViewMode);
     }
 
     private async Task FitAsync()
     {
-        if (_module is not null) await _module.InvokeVoidAsync("fit");
+        if (_module is null) return;
+        await _module.InvokeVoidAsync(_opts.ViewMode == "3d" ? "fit3d" : "fit");
     }
 
     private void OnSearchSelected()

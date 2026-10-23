@@ -166,4 +166,26 @@
   <data name="Tree_Orientation_horizontal" xml:space="preserve"><value>Horizontal</value></data>
   <data name="Tree_ShowIds" xml:space="preserve"><value>Show IDs</value></data>
   <data name="Tree_ShowSex" xml:space="preserve"><value>Show sex symbols</value></data>
+  <data name="Tree_ViewMode" xml:space="preserve"><value>Tree view</value></data>
+  <data name="Tree_View2D" xml:space="preserve"><value>2D</value></data>
+  <data name="Tree_View3D" xml:space="preserve"><value>3D</value></data>
+  <data name="Tree_3dUnavailable" xml:space="preserve"><value>The 3D view could not start in this browser. Switch to 2D to continue.</value></data>
+  <data name="Tree_3dCanvasLabel" xml:space="preserve"><value>Interactive 3D family tree</value></data>
+  <data name="Tree_3dFigureLabel" xml:space="preserve"><value>Person</value></data>
+  <data name="Tree_3dRoot" xml:space="preserve"><value>Root person</value></data>
+  <data name="Tree_3dRootGeneration" xml:space="preserve"><value>Root generation</value></data>
+  <data name="Tree_3dAbove" xml:space="preserve"><value>Levels above root: {0}</value></data>
+  <data name="Tree_3dBelow" xml:space="preserve"><value>Levels below root: {0}</value></data>
+  <data name="Tree_3dSeparate" xml:space="preserve"><value>Separate family</value></data>
+  <data name="Tree_3dCycle" xml:space="preserve"><value>This family contains an ancestry cycle. All people and links are shown, but its levels cannot represent generations.</value></data>
+  <data name="Tree_3dConflictingLevels" xml:space="preserve"><value>Some family links span levels. Levels describe the layout, not ages or an exact number of ancestral steps.</value></data>
+  <data name="Tree_3dSelected" xml:space="preserve"><value>Selected</value></data>
+  <data name="Tree_3dPreview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Tree_3dSelf" xml:space="preserve"><value>This person</value></data>
+  <data name="Tree_3dNoRelations" xml:space="preserve"><value>No parents, partners, or children recorded.</value></data>
+  <data name="Tree_3dLegend" xml:space="preserve"><value>Generations &amp; relationships</value></data>
+  <data name="Tree_3dLegendLevels" xml:space="preserve"><value>Higher / rear: earlier levels · lower / front: later levels</value></data>
+  <data name="Tree_3dLegendColors" xml:space="preserve"><value>Warm: above root · purple: root level · blue: below root</value></data>
+  <data name="Tree_3dLegendLinks" xml:space="preserve"><value>Diamond: family junction · arrow: parent → child</value></data>
+  <data name="Tree_3dLegendFocus" xml:space="preserve"><value>Hover or select a person to highlight their immediate family.</value></data>
 </root>

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "build": "esbuild ClientSrc/tree.ts --bundle --format=esm --outfile=wwwroot/js/tree.js --minify",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "node --test ClientTests/*.test.mjs"
   },
   "license": "ISC",
   "type": "commonjs",
@@ -11,12 +12,14 @@
     "d3-selection": "^3.0.0",
     "d3-transition": "^3.0.1",
     "d3-zoom": "^3.0.0",
+    "three": "^0.186.1",
     "topola": "^3.10.4"
   },
   "devDependencies": {
     "@types/d3-selection": "^3.0.12",
     "@types/d3-transition": "^3.0.9",
     "@types/d3-zoom": "^3.0.9",
+    "@types/three": "^0.186.0",
     "esbuild": "^0.28.2",
     "typescript": "^7.0.2"
   },

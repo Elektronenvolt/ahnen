@@ -104,7 +104,7 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 .tree-page { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
 .tree-toolbar {
-    display: flex; gap: .5rem; align-items: center;
+    display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
     padding: .6rem 1rem; background: var(--surface);
     border-bottom: 1px solid var(--border);
 }
@@ -122,6 +122,35 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 .tree-chart { overflow: hidden; }
 .tree-chart svg.topola-svg { width: 100%; height: 100%; display: block; cursor: grab; }
 .tree-chart svg.topola-svg:active { cursor: grabbing; }
+.tree-chart-3d { flex: 1; min-width: 0; min-height: 0; overflow: hidden; background: #f1f5f9; }
+.tree-chart-3d canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.tree-chart-3d canvas:active { cursor: grabbing; }
+.tree3d-overlays { position: absolute; inset: 0; pointer-events: none; }
+.tree3d-overlays[hidden] { display: none; }
+.tree3d-status {
+    position: absolute; top: .8rem; right: .8rem; z-index: 2; max-width: min(30rem, calc(100% - 1.6rem));
+    padding: .7rem .9rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface); color: var(--text);
+    box-shadow: var(--shadow); text-align: center;
+}
+.tree3d-tooltip {
+    position: absolute; z-index: 3; pointer-events: none; padding: .35rem .55rem;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 6px;
+    background: rgba(24,32,45,.92); color: white; font-size: .78rem;
+    box-shadow: var(--shadow); white-space: nowrap;
+}
+.tree3d-legend, .tree3d-summary {
+    position: absolute; left: .8rem; max-width: min(30rem, calc(100% - 1.6rem));
+    padding: .6rem .8rem; background: rgba(255,255,255,.94);
+    color: #344054; border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: var(--shadow); font-size: .75rem; line-height: 1.6;
+}
+.tree3d-legend { bottom: .8rem; }
+.tree3d-summary { top: .8rem; }
+.tree3d-summary div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree3d-legend strong, .tree3d-summary strong { display: block; }
+.with-panel .tree3d-overlays { right: 340px; }
+.view-modes { flex: 0 0 auto; }
 
 /* Topola chart theming: dark-grey connectors, softer boxes, app colours by sex */
 .tree-chart .link { stroke: #4b5563; }
@@ -332,4 +361,7 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
     .edit-page { flex-direction: column; }
     .person-list-panel { width: 100%; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
     .detail-panel { position: absolute; right: 0; top: 0; bottom: 0; box-shadow: var(--shadow); }
+    .with-panel .tree3d-overlays { right: 0; }
+    .with-panel .tree3d-legend, .with-panel .tree3d-summary { display: none; }
+    .tree-search { min-width: 160px; flex: 1; }
 }

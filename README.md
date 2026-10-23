@@ -1,11 +1,21 @@
 # Ahnen 🌳
 
 A local-first family tree web application built with **.NET 10 Blazor** (Interactive Server) and a
-TypeScript visualization layer based on [Topola](https://github.com/PeWu/topola) (Apache-2.0, d3).
+TypeScript visualization layer based on [Topola](https://github.com/PeWu/topola) (Apache-2.0), d3,
+and Three.js (MIT).
 
 - **Family tree page** (`/`) — interactive Topola chart: person boxes with photos, spouse pairs,
   multiple marriages, expand/collapse of branches, animated transitions, zoom/pan (wheel, drag,
-  toolbar), fit-to-view and automatic re-fit on window/panel resize.
+  toolbar), fit-to-view and automatic re-fit on window/panel resize. An optional **3D view** shows
+  people on generation terraces: earlier levels are higher/rearward, later levels lower/frontward.
+  Level headings count upward toward ancestors (**G+1**, **G+2**) and downward toward descendants
+  (**G-1**, **G-2**), with the root at **G0**. An English/German legend complements the colors. Partners share
+  family junctions; arrows point toward children. Hover or select someone to highlight their
+  parents, partners, children, and connecting links without rearranging the tree.
+  Orbit, pan, zoom, and fit-to-view remain available.
+  - Levels stay anchored to the root until **Set as root** is used. Separate families are labeled
+    independently. Complex pedigrees can span levels; layout warnings preserve every recorded
+    relationship rather than rewriting the data. Figures do not imply age.
   - Chart types: **Hourglass** (ancestors + descendants, default), **Relatives**, **Ancestors**,
     **Descendants**. Click a person to center the chart on them; Shift-click only shows details.
   - Settings (⚙, remembered in the browser): colours (none / by sex / by generation),
@@ -52,6 +62,8 @@ webp together with a 160×160 thumbnail. The JSON only stores the relative path.
 
 ```bash
 dotnet test
+# deterministic client layout and relationship tests
+npm --prefix Ahnen.Web test
 ```
 
 ## Deployment
@@ -145,9 +157,11 @@ Ahnen.Web/
 │                  RelationshipService (derives kinship labels),
 │                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
-├── ClientSrc/     tree.ts — TypeScript wrapper around Topola + d3-zoom (built with esbuild)
+├── ClientSrc/     tree.ts — Topola + d3-zoom, tree3d.ts — Three.js renderer,
+│                  tree3d-layout.ts — pure family graph layout and neighborhood selection (esbuild)
+├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
 ├── Resources/     en/de string resources
 └── seed/          sample family used on first start
 ```
 
-All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (esbuild), MIT (SkiaSharp), MIT (.NET).
+All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (Three.js, esbuild, SkiaSharp, .NET).

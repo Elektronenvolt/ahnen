@@ -166,4 +166,26 @@
   <data name="Tree_Orientation_horizontal" xml:space="preserve"><value>Horizontal</value></data>
   <data name="Tree_ShowIds" xml:space="preserve"><value>IDs anzeigen</value></data>
   <data name="Tree_ShowSex" xml:space="preserve"><value>Geschlechtssymbole anzeigen</value></data>
+  <data name="Tree_ViewMode" xml:space="preserve"><value>Baumansicht</value></data>
+  <data name="Tree_View2D" xml:space="preserve"><value>2D</value></data>
+  <data name="Tree_View3D" xml:space="preserve"><value>3D</value></data>
+  <data name="Tree_3dUnavailable" xml:space="preserve"><value>Die 3D-Ansicht konnte in diesem Browser nicht gestartet werden. Wechsle zur 2D-Ansicht, um fortzufahren.</value></data>
+  <data name="Tree_3dCanvasLabel" xml:space="preserve"><value>Interaktiver 3D-Stammbaum</value></data>
+  <data name="Tree_3dFigureLabel" xml:space="preserve"><value>Person</value></data>
+  <data name="Tree_3dRoot" xml:space="preserve"><value>Wurzelperson</value></data>
+  <data name="Tree_3dRootGeneration" xml:space="preserve"><value>Wurzelgeneration</value></data>
+  <data name="Tree_3dAbove" xml:space="preserve"><value>Ebenen über der Wurzel: {0}</value></data>
+  <data name="Tree_3dBelow" xml:space="preserve"><value>Ebenen unter der Wurzel: {0}</value></data>
+  <data name="Tree_3dSeparate" xml:space="preserve"><value>Separate Familie</value></data>
+  <data name="Tree_3dCycle" xml:space="preserve"><value>Diese Familie enthält einen Abstammungszyklus. Alle Personen und Verbindungen bleiben sichtbar, ihre Ebenen können aber keine Generationen darstellen.</value></data>
+  <data name="Tree_3dConflictingLevels" xml:space="preserve"><value>Einige Familienverbindungen überspringen Ebenen. Die Ebenen beschreiben das Layout, nicht das Alter oder eine genaue Anzahl von Abstammungsschritten.</value></data>
+  <data name="Tree_3dSelected" xml:space="preserve"><value>Ausgewählt</value></data>
+  <data name="Tree_3dPreview" xml:space="preserve"><value>Vorschau</value></data>
+  <data name="Tree_3dSelf" xml:space="preserve"><value>Diese Person</value></data>
+  <data name="Tree_3dNoRelations" xml:space="preserve"><value>Keine Eltern, Partner oder Kinder erfasst.</value></data>
+  <data name="Tree_3dLegend" xml:space="preserve"><value>Generationen &amp; Beziehungen</value></data>
+  <data name="Tree_3dLegendLevels" xml:space="preserve"><value>Höher / hinten: frühere Ebenen · tiefer / vorne: spätere Ebenen</value></data>
+  <data name="Tree_3dLegendColors" xml:space="preserve"><value>Warm: über der Wurzel · violett: Wurzelebene · blau: darunter</value></data>
+  <data name="Tree_3dLegendLinks" xml:space="preserve"><value>Raute: Familienknoten · Pfeil: Elternteil → Kind</value></data>
+  <data name="Tree_3dLegendFocus" xml:space="preserve"><value>Berühre oder wähle eine Person, um ihre direkte Familie hervorzuheben.</value></data>
 </root>
