@@ -1,0 +1,315 @@
+@using Ahnen.Web.Models
+@using Ahnen.Web.Services
+@using Microsoft.Extensions.Localization
+@implements IDisposable
+@inject FamilyTreeStore Store
+@inject IStringLocalizer<SharedResources> L
+
+<details class="editor-section" open>
+    <summary>@L["Section_Names"]</summary>
+    <div class="name-editor">
+        @if (_loadedPersonId is not null)
+        {
+            <div class="form-grid name-editor-selectors">
+                <label>@L["Field_NameType"]
+                    <select @key="(_selectorRevision, 0)" class="input" value="@_state.SelectedType"
+                            @onchange="SelectType">
+                        @foreach (var type in Enum.GetValues<NameType>())
+                        {
+                            <option
+                                value="@type">@L[$"NameType_{type}"]@(_state.Count(type) > 0 ? $" — {L["Name_Recorded"]} ({_state.Count(type)})" : "")</option>
+                        }
+                    </select>
+                </label>
+                @if (_state.Entries.Count > 1 || _state.IsDraft && _state.Entries.Count > 0)
+                {
+                    <label>@L["Name_Entry"]
+                        <select @key="(_selectorRevision, 1)" class="input"
+                                value="@(_state.SelectedIndex?.ToString() ?? "draft")" @onchange="SelectEntry">
+                            @foreach (var index in _state.Entries)
+                            {
+                                <option value="@index">@EntryLabel(index)</option>
+                            }
+                            @if (_state.IsDraft)
+                            {
+                                <option value="draft">@L["Name_NewEntry"]</option>
+                            }
+                        </select>
+                    </label>
+                }
+            </div>
+            <p class="hint" id="@_helpId">@L["Name_TypeHelp"]</p>
+            @if (_state.IsDraft)
+            {
+                <p class="name-editor-draft" role="status">@L["Name_NoRecord"]</p>
+            }
+
+            <div class="form-grid">
+                <label>@L[$"Name_Given_{_state.SelectedType}"]
+                    <input class="input" value="@_state.Current.Given" aria-describedby="@_helpId"
+                           @oninput="e => Edit(n => n.Given = Text(e))"/>
+                </label>
+                <label>@L[$"Name_Surname_{_state.SelectedType}"]
+                    <input class="input" value="@_state.Current.Surname" aria-describedby="@_helpId"
+                           @oninput="e => Edit(n => n.Surname = Text(e))"/>
+                </label>
+            </div>
+            <details class="name-editor-details">
+                <summary>@L["Name_MoreDetails"]</summary>
+                <div class="form-grid">
+                    <label>@L["Field_Nickname"]
+                        <input class="input" value="@_state.Current.Nickname"
+                               @oninput="e => Edit(n => n.Nickname = Text(e))"/>
+                    </label>
+                    <label>@L["Field_Prefix"]
+                        <input class="input" value="@_state.Current.Prefix"
+                               @oninput="e => Edit(n => n.Prefix = Text(e))"/>
+                    </label>
+                    <label>@L["Field_Suffix"]
+                        <input class="input" value="@_state.Current.Suffix"
+                               @oninput="e => Edit(n => n.Suffix = Text(e))"/>
+                    </label>
+                </div>
+            </details>
+            <div class="name-editor-actions">
+                <button type="button" class="btn btn-small" @onclick="AddAnother">＋ @L["Name_AddAnother"]</button>
+                <button type="button" class="btn btn-small" disabled="@(!_state.CanRemove)"
+                        title="@(!_state.CanRemove ? L["Name_KeepOne"].Value : null)"
+                        @onclick="RemoveName">@L["Name_Remove"]</button>
+            </div>
+        }
+        @if (_error is not null)
+        {
+            <div class="name-editor-error" role="alert">
+                <span>@_error</span>
+                <button type="button" class="btn btn-small" @onclick="RetrySave">@L["Name_Retry"]</button>
+                <button type="button" class="btn btn-small" @onclick="Reload">@L["Name_Reload"]</button>
+            </div>
+        }
+        @if (_saved)
+        {
+            <div class="name-editor-saved" role="status">
+                <span>@L["Toast_Saved"]</span>
+                <button type="button" class="link-button" @onclick="Undo">@L["Btn_Undo"]</button>
+            </div>
+        }
+    </div>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public string PersonId { get; set; } = "";
+    [Parameter] public EventCallback NamesChanged { get; set; }
+    [Parameter] public int Revision { get; set; }
+
+    private readonly NameEditorState _state = new();
+    private readonly string _helpId = $"name-help-{Guid.NewGuid():N}";
+    private string? _loadedPersonId;
+    private int _loadedRevision;
+    private int _selectorRevision;
+    private CancellationTokenSource? _debounce;
+    private string? _error;
+    private bool _saved;
+    private bool _mutating;
+    private bool _disposed;
+
+    protected override void OnInitialized() => Store.Changed += OnStoreChanged;
+
+    protected override void OnParametersSet()
+    {
+        if (_loadedPersonId == PersonId && _loadedRevision == Revision) return;
+        if (_loadedPersonId != PersonId && !TrySave())
+            throw new InvalidOperationException(_error);
+        CancelDebounce();
+        _loadedRevision = Revision;
+        Load(_loadedPersonId == PersonId);
+    }
+
+    private void Load(bool preserveSelection)
+    {
+        _saved = false;
+        _error = null;
+        var person = Store.GetPerson(PersonId);
+        _loadedPersonId = person?.Id;
+        if (person is null)
+        {
+            _error = L["Name_PersonMissing"];
+            return;
+        }
+
+        _state.Load(person.Names, preserveSelection);
+    }
+
+    public void FlushSave()
+    {
+        if (!TrySave()) throw new InvalidOperationException(_error);
+    }
+
+    private bool TrySave()
+    {
+        CancelDebounce();
+        if (!_state.HasChanges || _loadedPersonId is null) return true;
+        _saved = false;
+        try
+        {
+            var latest = Store.GetPerson(_loadedPersonId);
+            if (latest is null)
+            {
+                _error = L["Name_PersonMissing"];
+                return false;
+            }
+
+            if (!_state.MatchesBaseline(latest.Names))
+            {
+                _error = L["Name_Conflict"];
+                return false;
+            }
+
+            _mutating = true;
+            var changed = Store.UpdateNames(_loadedPersonId, _state.PendingNames(), _state.BaselineNames());
+            _state.AcceptSave();
+            _saved = changed;
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _error = string.Format(L["Name_SaveError"], ex.Message);
+            return false;
+        }
+        finally
+        {
+            _mutating = false;
+        }
+
+        if (!_disposed) _ = InvokeAsync(NamesChanged.InvokeAsync);
+        return true;
+    }
+
+    private void Edit(Action<PersonName> update)
+    {
+        update(_state.Current);
+        _saved = false;
+        CancelDebounce();
+        _debounce = new CancellationTokenSource();
+        _ = SaveAfterDelay(_debounce.Token);
+    }
+
+    private async Task SaveAfterDelay(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(600, cancellationToken);
+            await InvokeAsync(() =>
+            {
+                if (_disposed || cancellationToken.IsCancellationRequested) return;
+                TrySave();
+                StateHasChanged();
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void SelectType(ChangeEventArgs e)
+    {
+        _selectorRevision++;
+        if (!TrySave()) return;
+        if (Enum.TryParse<NameType>(Text(e), out var type) && Enum.IsDefined(type))
+        {
+            _state.SelectType(type);
+            _saved = false;
+        }
+    }
+
+    private void SelectEntry(ChangeEventArgs e)
+    {
+        _selectorRevision++;
+        if (!TrySave()) return;
+        if (int.TryParse(Text(e), out var index))
+        {
+            _state.SelectEntry(index);
+            _saved = false;
+        }
+    }
+
+    private void AddAnother()
+    {
+        if (!TrySave()) return;
+        _state.AddAnother();
+        _saved = false;
+    }
+
+    private void RemoveName()
+    {
+        if (!TrySave()) return;
+        _state.RemoveSelected();
+        TrySave();
+    }
+
+    private void RetrySave() => TrySave();
+
+    private void Reload()
+    {
+        CancelDebounce();
+        Load(true);
+    }
+
+    private async Task Undo()
+    {
+        if (!TrySave()) return;
+        try
+        {
+            _mutating = true;
+            if (!Store.Undo())
+            {
+                _saved = false;
+                _error = L["Name_UndoUnavailable"];
+                return;
+            }
+
+            Load(true);
+            await NamesChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            _saved = false;
+            _error = string.Format(L["Name_UndoError"], ex.Message);
+        }
+        finally
+        {
+            _mutating = false;
+        }
+    }
+
+    private string EntryLabel(int index) => string.Format(L["Name_EntryLabel"],
+        _state.Entries.ToList().IndexOf(index) + 1,
+        _state.Entry(index).Full is { Length: > 0 } name ? name : L["Name_EmptyEntry"].Value);
+
+    private static string Text(ChangeEventArgs e) => e.Value?.ToString() ?? "";
+
+    private void OnStoreChanged()
+    {
+        if (_mutating || _disposed) return;
+        _ = InvokeAsync(() =>
+        {
+            _saved = false;
+            StateHasChanged();
+        });
+    }
+
+    private void CancelDebounce()
+    {
+        _debounce?.Cancel();
+        _debounce?.Dispose();
+        _debounce = null;
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        Store.Changed -= OnStoreChanged;
+        TrySave();
+        CancelDebounce();
+    }
+
+}

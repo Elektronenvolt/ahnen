@@ -119,4 +119,36 @@
   <data name="NameType_PROFESSIONAL" xml:space="preserve"><value>Professional name</value></data>
   <data name="NameType_OTHER" xml:space="preserve"><value>Other</value></data>
   <data name="Fam_SEP" xml:space="preserve"><value>Separated</value></data>
+  <data name="Name_Given_BIRTH" xml:space="preserve"><value>Birth given name</value></data>
+  <data name="Name_Surname_BIRTH" xml:space="preserve"><value>Birth surname</value></data>
+  <data name="Name_Given_MARRIED" xml:space="preserve"><value>Married given name</value></data>
+  <data name="Name_Surname_MARRIED" xml:space="preserve"><value>Married surname</value></data>
+  <data name="Name_Given_AKA" xml:space="preserve"><value>Alternative given name</value></data>
+  <data name="Name_Surname_AKA" xml:space="preserve"><value>Alternative surname</value></data>
+  <data name="Name_Given_MAIDEN" xml:space="preserve"><value>Maiden given name</value></data>
+  <data name="Name_Surname_MAIDEN" xml:space="preserve"><value>Maiden surname</value></data>
+  <data name="Name_Given_IMMIGRANT" xml:space="preserve"><value>Immigrant given name</value></data>
+  <data name="Name_Surname_IMMIGRANT" xml:space="preserve"><value>Immigrant surname</value></data>
+  <data name="Name_Given_PROFESSIONAL" xml:space="preserve"><value>Professional given name</value></data>
+  <data name="Name_Surname_PROFESSIONAL" xml:space="preserve"><value>Professional surname</value></data>
+  <data name="Name_Given_OTHER" xml:space="preserve"><value>Other given name</value></data>
+  <data name="Name_Surname_OTHER" xml:space="preserve"><value>Other surname</value></data>
+  <data name="Name_Recorded" xml:space="preserve"><value>recorded</value></data>
+  <data name="Name_Entry" xml:space="preserve"><value>Name entry</value></data>
+  <data name="Name_EntryLabel" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Name_EmptyEntry" xml:space="preserve"><value>Unnamed entry</value></data>
+  <data name="Name_NewEntry" xml:space="preserve"><value>New entry (not recorded)</value></data>
+  <data name="Name_NoRecord" xml:space="preserve"><value>No name recorded yet. Enter a name component to save this entry.</value></data>
+  <data name="Name_TypeHelp" xml:space="preserve"><value>Choose a type to edit its own name, not to change another name's type. Entries keep their original order; the first name remains the display name. All name components are saved exactly as entered.</value></data>
+  <data name="Name_MoreDetails" xml:space="preserve"><value>More name details (optional)</value></data>
+  <data name="Name_AddAnother" xml:space="preserve"><value>Add another name of this type</value></data>
+  <data name="Name_Remove" xml:space="preserve"><value>Remove this name</value></data>
+  <data name="Name_KeepOne" xml:space="preserve"><value>Keep at least one name. An unrecorded draft cannot be removed.</value></data>
+  <data name="Name_Retry" xml:space="preserve"><value>Retry save</value></data>
+  <data name="Name_Reload" xml:space="preserve"><value>Discard changes and reload names</value></data>
+  <data name="Name_PersonMissing" xml:space="preserve"><value>This person no longer exists. Name changes could not be saved.</value></data>
+  <data name="Name_Conflict" xml:space="preserve"><value>The stored names changed while you were editing. Your changes have not been saved. Reload the names before editing again.</value></data>
+  <data name="Name_SaveError" xml:space="preserve"><value>Name changes could not be saved: {0}</value></data>
+  <data name="Name_UndoError" xml:space="preserve"><value>The name change could not be undone: {0}</value></data>
+  <data name="Name_UndoUnavailable" xml:space="preserve"><value>There is no saved change to undo.</value></data>
 </root>

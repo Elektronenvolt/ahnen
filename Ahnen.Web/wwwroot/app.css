@@ -231,6 +231,21 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 .form-grid label, .form-wide { display: flex; flex-direction: column; gap: .25rem; font-size: .85rem; color: var(--text-muted); }
 .form-wide { display: flex; }
 
+.name-editor { min-width: 0; }
+.name-editor .form-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.name-editor-selectors select { min-width: 0; max-width: 100%; }
+.name-editor .hint { margin-bottom: .7rem; }
+.name-editor-draft { color: var(--text-muted); font-size: .85rem; }
+.name-editor-details { margin: .8rem 0; }
+.name-editor-details > summary { cursor: pointer; color: var(--text-muted); font-size: .85rem; padding: 0; margin-bottom: .7rem; }
+.name-editor .name-editor-details > summary::before { content: "▸ "; }
+.name-editor .name-editor-details[open] > summary::before { content: "▾ "; }
+.name-editor-actions, .name-editor-saved { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.name-editor-saved { margin-top: .7rem; font-size: .85rem; }
+.name-editor-error { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .7rem; color: var(--danger); overflow-wrap: anywhere; }
+.name-editor-error > span { flex-basis: 100%; }
+.name-editor button:disabled { opacity: .5; cursor: not-allowed; }
+
 .photo-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .photo-preview { width: 96px; height: 96px; border-radius: var(--radius); object-fit: cover; }
 .photo-upload { position: relative; overflow: hidden; }

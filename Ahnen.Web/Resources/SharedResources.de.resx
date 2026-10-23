@@ -119,4 +119,36 @@
   <data name="NameType_PROFESSIONAL" xml:space="preserve"><value>Künstlername</value></data>
   <data name="NameType_OTHER" xml:space="preserve"><value>Sonstiger</value></data>
   <data name="Fam_SEP" xml:space="preserve"><value>Getrennt lebend</value></data>
+  <data name="Name_Given_BIRTH" xml:space="preserve"><value>Vorname bei Geburt</value></data>
+  <data name="Name_Surname_BIRTH" xml:space="preserve"><value>Nachname bei Geburt</value></data>
+  <data name="Name_Given_MARRIED" xml:space="preserve"><value>Vorname nach Heirat</value></data>
+  <data name="Name_Surname_MARRIED" xml:space="preserve"><value>Nachname nach Heirat</value></data>
+  <data name="Name_Given_AKA" xml:space="preserve"><value>Alternativer Vorname</value></data>
+  <data name="Name_Surname_AKA" xml:space="preserve"><value>Alternativer Nachname</value></data>
+  <data name="Name_Given_MAIDEN" xml:space="preserve"><value>Vorname vor Heirat</value></data>
+  <data name="Name_Surname_MAIDEN" xml:space="preserve"><value>Nachname vor Heirat</value></data>
+  <data name="Name_Given_IMMIGRANT" xml:space="preserve"><value>Vorname bei Einwanderung</value></data>
+  <data name="Name_Surname_IMMIGRANT" xml:space="preserve"><value>Nachname bei Einwanderung</value></data>
+  <data name="Name_Given_PROFESSIONAL" xml:space="preserve"><value>Beruflicher Vorname</value></data>
+  <data name="Name_Surname_PROFESSIONAL" xml:space="preserve"><value>Beruflicher Nachname</value></data>
+  <data name="Name_Given_OTHER" xml:space="preserve"><value>Sonstiger Vorname</value></data>
+  <data name="Name_Surname_OTHER" xml:space="preserve"><value>Sonstiger Nachname</value></data>
+  <data name="Name_Recorded" xml:space="preserve"><value>erfasst</value></data>
+  <data name="Name_Entry" xml:space="preserve"><value>Namenseintrag</value></data>
+  <data name="Name_EntryLabel" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Name_EmptyEntry" xml:space="preserve"><value>Eintrag ohne Namen</value></data>
+  <data name="Name_NewEntry" xml:space="preserve"><value>Neuer Eintrag (nicht erfasst)</value></data>
+  <data name="Name_NoRecord" xml:space="preserve"><value>Noch kein Name erfasst. Zum Speichern einen Namensbestandteil eingeben.</value></data>
+  <data name="Name_TypeHelp" xml:space="preserve"><value>Die Auswahl öffnet den eigenen Namen dieses Typs; sie ändert nicht den Typ eines anderen Namens. Die Reihenfolge bleibt erhalten; der erste Name bleibt der Anzeigename. Alle Namensbestandteile werden unverändert gespeichert.</value></data>
+  <data name="Name_MoreDetails" xml:space="preserve"><value>Weitere Namensdetails (optional)</value></data>
+  <data name="Name_AddAnother" xml:space="preserve"><value>Weiteren Namen dieses Typs hinzufügen</value></data>
+  <data name="Name_Remove" xml:space="preserve"><value>Diesen Namen entfernen</value></data>
+  <data name="Name_KeepOne" xml:space="preserve"><value>Mindestens einen Namen behalten. Ein nicht erfasster Entwurf kann nicht entfernt werden.</value></data>
+  <data name="Name_Retry" xml:space="preserve"><value>Speichern erneut versuchen</value></data>
+  <data name="Name_Reload" xml:space="preserve"><value>Änderungen verwerfen und Namen neu laden</value></data>
+  <data name="Name_PersonMissing" xml:space="preserve"><value>Diese Person existiert nicht mehr. Die Namensänderungen konnten nicht gespeichert werden.</value></data>
+  <data name="Name_Conflict" xml:space="preserve"><value>Die gespeicherten Namen wurden während der Bearbeitung geändert. Ihre Änderungen wurden nicht gespeichert. Laden Sie die Namen vor der weiteren Bearbeitung neu.</value></data>
+  <data name="Name_SaveError" xml:space="preserve"><value>Die Namensänderungen konnten nicht gespeichert werden: {0}</value></data>
+  <data name="Name_UndoError" xml:space="preserve"><value>Die Namensänderung konnte nicht rückgängig gemacht werden: {0}</value></data>
+  <data name="Name_UndoUnavailable" xml:space="preserve"><value>Es gibt keine gespeicherte Änderung zum Rückgängigmachen.</value></data>
 </root>

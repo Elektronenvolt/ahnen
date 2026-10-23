@@ -183,6 +183,50 @@ public class FamilyTreeStore
             return true;
         });
 
+    public void UpdatePersonFacts(Person person) =>
+        Mutate(d =>
+        {
+            var index = d.Persons.FindIndex(p => p.Id == person.Id);
+            if (index < 0) throw new InvalidOperationException($"Unknown person {person.Id}");
+            var updated = Clone(person);
+            updated.Names = Clone(d.Persons[index].Names);
+            d.Persons[index] = updated;
+            return true;
+        });
+
+    public bool UpdateNames(string personId, IReadOnlyList<PersonName> names,
+        IReadOnlyList<PersonName>? expectedNames = null)
+    {
+        lock (_gate)
+        {
+            var person = _data.Persons.FirstOrDefault(p => p.Id == personId)
+                ?? throw new InvalidOperationException($"Unknown person {personId}");
+            var currentJson = JsonSerializer.Serialize(person.Names, JsonOptions);
+            if (expectedNames is not null &&
+                currentJson != JsonSerializer.Serialize(expectedNames, JsonOptions))
+                throw new InvalidOperationException("Names changed since they were loaded. Reload before saving.");
+            if (currentJson == JsonSerializer.Serialize(names, JsonOptions)) return false;
+
+            var candidate = Clone(_data);
+            candidate.Persons.Single(p => p.Id == personId).Names = Clone(names.ToList());
+            GedcomValidator.ValidateLegal(candidate);
+            var before = _data;
+            _data = candidate;
+            try
+            {
+                Save();
+            }
+            catch
+            {
+                _data = before;
+                throw;
+            }
+            _undoSnapshot = JsonSerializer.Serialize(before, JsonOptions);
+        }
+        Changed?.Invoke();
+        return true;
+    }
+
     /// <summary>Deletes a person and cleans every reference. Returns removed photo files for disk cleanup.</summary>
     public IReadOnlyList<string> DeletePerson(string personId) =>
         Mutate(d =>

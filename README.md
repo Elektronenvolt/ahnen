@@ -62,6 +62,28 @@ docker run -p 8080:8080 -v ahnen-data:/data ahnen
 
 The Docker volume `/data` holds the JSON file and photos.
 
+## Editing personal names
+
+The name-type selector opens a separately stored name, rather than changing the type of the
+current entry. A type with no recorded name opens a blank draft; selecting it alone saves nothing.
+Typing any name component saves that entry after a short debounce. Changes to names are saved
+independently of facts, so an invalid pending date does not prevent a name save.
+
+Field labels follow the selected type in English and German. **More name details** exposes optional
+nickname, prefix, and suffix fields for every type; collapsing it never discards those values.
+Name text is stored verbatim, including spacing and capitalization, regardless of the UI language.
+
+Use the entry selector to edit duplicate names of the same type, or **Add another name of this type**
+to start a new draft. Records are never merged or reordered: the first recorded name remains the
+display name. **Remove this name** removes only the selected entry and always retains at least one
+record. **Saved / Undo** confirms successful persistence and restores the previous save using the
+app's one-step undo. A later change elsewhere replaces that undo opportunity.
+
+Pending name edits are flushed when switching types, entries, or people and before fact saves or
+leaving the editor. Save failures appear inline, retain the unsaved edits, and do not show **Saved**.
+If stored names have changed in the meantime, reload them explicitly rather than overwrite another
+edit; the reload button discards local name changes.
+
 ## GEDCOM 7 compatibility
 
 **Binding rule: in any design conflict, GEDCOM compatibility overrules.** The JSON schema is a 1:1

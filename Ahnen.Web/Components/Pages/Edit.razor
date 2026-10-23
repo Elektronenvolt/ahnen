@@ -56,38 +56,8 @@
                 </div>
             </div>
 
-            <details class="editor-section" open>
-                <summary>@L["Section_Names"]</summary>
-                @for (var i = 0; i < _person.Names.Count; i++)
-                {
-                    var index = i;
-                    var name = _person.Names[index];
-                    <div class="form-grid">
-                        <label>@L["Field_NameType"]
-                            <select class="input" @bind="name.Type" @bind:after="ScheduleSave">
-                                @foreach (var t in Enum.GetValues<NameType>())
-                                {
-                                    <option value="@t">@(L[$"NameType_{t}"])</option>
-                                }
-                            </select>
-                        </label>
-                        <label>@L["Field_Given"]
-                            <input class="input" @bind="name.Given" @bind:after="ScheduleSave" />
-                        </label>
-                        <label>@L["Field_Surname"]
-                            <input class="input" @bind="name.Surname" @bind:after="ScheduleSave" />
-                        </label>
-                        <label>@L["Field_Nickname"]
-                            <input class="input" @bind="name.Nickname" @bind:after="ScheduleSave" />
-                        </label>
-                        @if (_person.Names.Count > 1)
-                        {
-                            <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => RemoveName(index)">✕</button>
-                        }
-                    </div>
-                }
-                <button class="btn btn-small" @onclick="AddName">＋ @L["Btn_AddName"]</button>
-            </details>
+            <NameEditor @ref="_nameEditor" PersonId="@_person.Id" Revision="_nameRevision"
+                        NamesChanged="RefreshNames" />
 
             <details class="editor-section" open>
                 <summary>@L["Section_Facts"]</summary>
@@ -329,6 +299,28 @@
     private string? _personId;
     private Person? _person;
     private string _search = "";
+    private NameEditor? _nameEditor;
+    private int _nameRevision;
+
+    private void RefreshNames()
+    {
+        if (_person is not null && Store.GetPerson(_person.Id) is { } saved)
+            _person.Names = saved.Names;
+    }
+
+    private bool TryFlushNames()
+    {
+        try
+        {
+            _nameEditor?.FlushSave();
+            return true;
+        }
+        catch (InvalidOperationException ex)
+        {
+            _errorMessage = ex.Message;
+            return false;
+        }
+    }
 
     // Editable mirrors of event-backed fields
     private string _birthDate = "", _birthPlace = "", _deathDate = "", _deathPlace = "";
@@ -372,6 +364,7 @@
 
     private void Select(string personId)
     {
+        if (!TryFlushNames()) return;
         FlushSave();
         var person = Store.GetPerson(personId);
         if (person is null) return;
@@ -390,6 +383,7 @@
 
     private void NewPerson()
     {
+        if (!TryFlushNames()) return;
         FlushSave();
         var person = Store.AddPerson("", "", Sex.U);
         Select(person.Id);
@@ -440,7 +434,8 @@
         _person.Notes = _notes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         _person.Address.Lines = _addressLine.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
-        Store.UpdatePerson(_person);
+        Store.UpdatePersonFacts(_person);
+        RefreshNames();
         ShowToast(L["Toast_Saved"]);
     }
 
@@ -480,21 +475,6 @@
             : $"→ {GedcomDate.Display(normalized, CultureInfo.CurrentUICulture)} ({normalized})";
     }
 
-    // ---- names -----------------------------------------------------------
-
-    private void AddName()
-    {
-        _person?.Names.Add(new PersonName { Type = NameType.AKA });
-        ScheduleSave();
-    }
-
-    private void RemoveName(int index)
-    {
-        if (_person is null || _person.Names.Count <= 1) return;
-        _person.Names.RemoveAt(index);
-        ScheduleSave();
-    }
-
     // ---- photo -----------------------------------------------------------
 
     private async Task UploadPhoto(InputFileChangeEventArgs e)
@@ -514,7 +494,7 @@
             foreach (var old in _person.Media)
                 Photos.Delete(old.File);
             _person.Media = [media];
-            Store.UpdatePerson(_person);
+            Store.UpdatePersonFacts(_person);
             ShowToast(L["Toast_Saved"]);
         }
         catch (Exception ex)
@@ -529,7 +509,7 @@
         foreach (var old in _person.Media)
             Photos.Delete(old.File);
         _person.Media = [];
-        Store.UpdatePerson(_person);
+        Store.UpdatePersonFacts(_person);
         ShowToast(L["Toast_Saved"]);
     }
 
@@ -674,6 +654,8 @@
     private void DoDelete()
     {
         if (_personId is null) return;
+        if (!TryFlushNames()) return;
+        FlushSave();
         _confirmDelete = false;
         var photos = Store.DeletePerson(_personId);
         foreach (var photo in photos)
@@ -699,7 +681,10 @@
 
     private void UndoLast()
     {
+        if (!TryFlushNames()) return;
+        FlushSave();
         if (!Store.Undo()) return;
+        _nameRevision++;
         _toast = null;
         _toastTimer?.Dispose();
         if (_personId is not null && Store.GetPerson(_personId) is not null)
@@ -713,6 +698,7 @@
 
     public void Dispose()
     {
+        TryFlushNames();
         FlushSave();
         Store.Changed -= OnStoreChanged;
         _saveTimer?.Dispose();
