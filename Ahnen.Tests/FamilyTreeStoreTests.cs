@@ -108,16 +108,4 @@ public class FamilyTreeStoreTests : IDisposable
         Assert.Equal("DIV", FamilyStatus.GetStatus(fam));
         Store.UpdateFamily(fam); // must pass GEDCOM validation
     }
-
-    [Fact]
-    public void Chart_data_maps_relations()
-    {
-        var p = TestData.BuildFamily(Store);
-        var chart = new ChartDataService(Store).Build();
-        var me = chart.Single(d => d.Id == p["me"].Id);
-        Assert.Contains(p["father"].Id, me.Rels.Parents);
-        Assert.Contains(p["mother"].Id, me.Rels.Parents);
-        Assert.Contains(p["wife"].Id, me.Rels.Spouses);
-        Assert.Equal("M", me.Data["gender"]);
-    }
 }

@@ -5,7 +5,7 @@ COPY Ahnen.Web/package.json Ahnen.Web/package-lock.json ./
 RUN npm ci
 COPY Ahnen.Web/ClientSrc ./ClientSrc
 COPY Ahnen.Web/tsconfig.json ./
-RUN mkdir -p wwwroot/js wwwroot/css && npm run build
+RUN mkdir -p wwwroot/js && npm run build
 
 # Build the .NET app
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -14,7 +14,6 @@ COPY Ahnen.Web/Ahnen.Web.csproj Ahnen.Web/
 RUN dotnet restore Ahnen.Web/Ahnen.Web.csproj
 COPY Ahnen.Web Ahnen.Web
 COPY --from=client /src/wwwroot/js Ahnen.Web/wwwroot/js
-COPY --from=client /src/wwwroot/css Ahnen.Web/wwwroot/css
 # the client bundle is prebuilt; skip the npm MSBuild target
 RUN dotnet publish Ahnen.Web/Ahnen.Web.csproj -c Release -o /app /p:BuildClientSkip=true
 

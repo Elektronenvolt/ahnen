@@ -23,7 +23,40 @@
                 <option value="@PersonOption(p)"></option>
             }
         </datalist>
+        <div class="chart-types" role="group" aria-label="@L["Tree_ChartType"]">
+            @foreach (var kind in ChartKinds)
+            {
+                <button class="chart-type @(_opts.ChartType == kind ? "active" : "")"
+                        @onclick="() => SetChartTypeAsync(kind)">@L[$"Tree_Chart_{kind}"]</button>
+            }
+        </div>
         <div class="tree-toolbar-spacer"></div>
+        <div class="settings-wrap">
+            <button class="btn-icon @(_settingsOpen ? "active" : "")" title="@L["Tree_Settings"]"
+                    @onclick="() => _settingsOpen = !_settingsOpen">⚙</button>
+            @if (_settingsOpen)
+            {
+                <div class="settings-popover">
+                    <label>@L["Tree_Colors"]
+                        <select value="@_opts.Colors" @onchange="OnColorsChanged">
+                            <option value="none">@L["Tree_Colors_none"]</option>
+                            <option value="sex">@L["Tree_Colors_sex"]</option>
+                            <option value="generation">@L["Tree_Colors_generation"]</option>
+                        </select>
+                    </label>
+                    <label>@L["Tree_Orientation"]
+                        <select value="@(_opts.Horizontal ? "h" : "v")" @onchange="OnOrientationChanged">
+                            <option value="v">@L["Tree_Orientation_vertical"]</option>
+                            <option value="h">@L["Tree_Orientation_horizontal"]</option>
+                        </select>
+                    </label>
+                    <label class="check"><input type="checkbox" checked="@_opts.ShowIds"
+                                                @onchange="e => UpdateAsync(o => o.ShowIds = e.Value is true)" /> @L["Tree_ShowIds"]</label>
+                    <label class="check"><input type="checkbox" checked="@_opts.ShowSex"
+                                                @onchange="e => UpdateAsync(o => o.ShowSex = e.Value is true)" /> @L["Tree_ShowSex"]</label>
+                </div>
+            }
+        </div>
         <button class="btn-icon" title="@L["Tree_ZoomIn"]" @onclick="() => ZoomAsync(1)">＋</button>
         <button class="btn-icon" title="@L["Tree_ZoomOut"]" @onclick="() => ZoomAsync(-1)">－</button>
         <button class="btn-icon" title="@L["Tree_Fit"]" @onclick="FitAsync">⤢</button>
@@ -39,7 +72,7 @@
     else
     {
         <div class="tree-chart-wrap @(_selected is not null ? "with-panel" : "")">
-            <div id="familyChart" class="f3 tree-chart"></div>
+            <div id="familyChart" class="tree-chart"></div>
 
             @if (_selected is not null)
             {
@@ -123,6 +156,20 @@
     private string _rootName = "";
     private string _searchText = "";
     private bool _chartInitialized;
+    private bool _settingsOpen;
+    private ChartOptions _opts = new();
+
+    private static readonly string[] ChartKinds = ["hourglass", "relatives", "ancestors", "descendants"];
+
+    /// <summary>Display options of the chart; persisted client-side (localStorage) by the JS module.</summary>
+    public class ChartOptions
+    {
+        public string ChartType { get; set; } = "hourglass";
+        public string Colors { get; set; } = "sex";
+        public bool Horizontal { get; set; }
+        public bool ShowIds { get; set; }
+        public bool ShowSex { get; set; } = true;
+    }
 
     protected override void OnInitialized()
     {
@@ -138,9 +185,10 @@
         {
             _selfRef = DotNetObjectReference.Create(this);
             _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/tree.js");
-            await _module.InvokeVoidAsync("init", "familyChart", ChartData.Build(),
-                _selected?.Id ?? Store.RootPersonId, _selfRef);
+            _opts = await _module.InvokeAsync<ChartOptions>("init", "familyChart", ChartData.Build(),
+                _selected?.Id ?? Store.RootPersonId, _selfRef, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
             _chartInitialized = true;
+            StateHasChanged();
         }
     }
 
@@ -159,6 +207,7 @@
     public void OnPersonClicked(string personId) =>
         _ = InvokeAsync(() =>
         {
+            _settingsOpen = false;
             SelectPersonCore(personId);
             StateHasChanged();
         });
@@ -205,6 +254,19 @@
         Store.SetRootPerson(_selected.Id);
         if (_module is not null)
             await _module.InvokeVoidAsync("setMain", _selected.Id);
+    }
+
+    private async Task SetChartTypeAsync(string kind) => await UpdateAsync(o => o.ChartType = kind);
+
+    private Task OnColorsChanged(ChangeEventArgs e) => UpdateAsync(o => o.Colors = e.Value?.ToString() ?? "sex");
+
+    private Task OnOrientationChanged(ChangeEventArgs e) => UpdateAsync(o => o.Horizontal = e.Value?.ToString() == "h");
+
+    private async Task UpdateAsync(Action<ChartOptions> change)
+    {
+        change(_opts);
+        if (_module is not null)
+            _opts = await _module.InvokeAsync<ChartOptions>("setOptions", _opts);
     }
 
     private async Task ZoomAsync(int dir)
