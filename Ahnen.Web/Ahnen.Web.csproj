@@ -27,7 +27,7 @@
   </Target>
 
   <Target Name="BuildClient" BeforeTargets="AssignTargetPaths" Condition="'$(BuildClientSkip)' != 'true'"
-          Inputs="ClientSrc\tree.ts;ClientSrc\tree3d.ts;ClientSrc\tree3d-layout.ts;package.json;package-lock.json" Outputs="wwwroot\js\tree.js">
+          Inputs="ClientSrc\tree.ts;ClientSrc\tree3d.ts;ClientSrc\tree3d-layout.ts;ClientSrc\tree-overview.ts;package.json;package-lock.json" Outputs="wwwroot\js\tree.js">
     <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 

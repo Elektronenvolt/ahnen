@@ -18,6 +18,11 @@ and Three.js (MIT).
     relationship rather than rewriting the data. Figures do not imply age.
   - Chart types: **Hourglass** (ancestors + descendants, default), **Relatives**, **Ancestors**,
     **Descendants**. Click a person to center the chart on them; Shift-click only shows details.
+  - **Show all people** clears the selection and opens a temporary 2D overview including disconnected
+    families and isolated people. Selecting a person returns to the preferred chart type; Shift-click
+    still opens details without changing the view. In 3D, the button clears relationship highlighting.
+    Zoom, display settings, and the stored root are unchanged. Use **Fit to view** separately to fit
+    the whole overview on screen.
   - Settings (⚙, remembered in the browser): colours (none / by sex / by generation),
     vertical/horizontal orientation, show IDs, show sex symbols.
   - Detail panel with all data plus the derived relationship to the root person
