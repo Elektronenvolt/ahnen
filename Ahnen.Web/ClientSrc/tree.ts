@@ -15,6 +15,7 @@ import { select, type Selection } from 'd3-selection';
 import 'd3-transition';
 import { zoom, zoomIdentity, type ZoomBehavior } from 'd3-zoom';
 import { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d, zoom3d } from './tree3d';
+import { renderOverview } from './tree-overview';
 
 export type ChartKind = 'hourglass' | 'relatives' | 'ancestors' | 'descendants';
 export type ColorMode = 'none' | 'sex' | 'generation';
@@ -74,6 +75,8 @@ let chartSize: [number, number] = [0, 0];
 let userAdjusted = false;
 let renderToken = 0;
 let viewMode: '2d' | '3d' = '2d';
+let overview = false;
+let rootId: string | null = null;
 
 function loadOptions(): TreeOptions {
   try {
@@ -116,9 +119,7 @@ function resolveFocus(preferred: string | null): string | null {
 
 function onIndiClick(info: IndiInfo): void {
   const shift = !!info.modifiers?.shiftKey;
-  void dotnet?.invokeMethodAsync('OnPersonClicked', info.id);
-  // Shift-click only shows details; a normal click also re-centers the chart on the person.
-  if (!shift) focus(info.id);
+  void dotnet?.invokeMethodAsync('OnPersonClicked', info.id, !shift);
 }
 
 function buildHandle(): void {
@@ -139,11 +140,18 @@ function buildHandle(): void {
 
 /** Renders the chart; resolves once animations have finished. */
 async function render(): Promise<void> {
-  if (!handle || !chartSvgEl) return;
+  if (!handle || !chartSvgEl || !json) return;
+  // Text measurements in a hidden SVG are zero; render after 2D is visible.
+  if (viewMode === '3d') return;
   focusId = resolveFocus(focusId);
   if (!focusId) return;
   const token = ++renderToken;
-  const info = handle.render({ startIndi: focusId });
+  const info = overview
+    ? renderOverview(json, rootId, new DetailedRenderer({
+      data: new JsonDataProvider(json), colors: COLORS[options.colors],
+      horizontal: options.horizontal, locale, animate: false, indiCallback: onIndiClick
+    }), options.horizontal)
+    : handle.render({ startIndi: focusId });
   chartSize = info.size;
   await info.animationPromise.catch(() => undefined);
   if (token !== renderToken) return;
@@ -213,10 +221,19 @@ function autoView(ms = 400): void {
 
 function focus(personId: string): void {
   if (!json || !handle) return;
+  const wasOverview = overview;
+  if (overview) {
+    overview = false;
+    clearChart();
+    buildHandle();
+  }
   focusId = resolveFocus(personId);
-  void render().then(() => {
-    userAdjusted = false;
-    if (focusId) centerOn(focusId, Math.max(currentTransform().k, MIN_AUTO_SCALE));
+  const pending = render();
+  const token = renderToken;
+  void pending.then(() => {
+    if (token !== renderToken || viewMode !== '2d') return;
+    userAdjusted = wasOverview;
+    if (focusId) centerOn(focusId, wasOverview ? currentTransform().k : Math.max(currentTransform().k, MIN_AUTO_SCALE));
   });
 }
 
@@ -240,6 +257,7 @@ export function init(
   options = loadOptions();
   viewMode = options.viewMode;
   json = prepare(data);
+  rootId = mainId;
   focusId = resolveFocus(mainId);
 
   el.innerHTML = '';
@@ -258,7 +276,11 @@ export function init(
   outerSvg.call(zoomBehavior).on('dblclick.zoom', null);
 
   buildHandle();
-  void render().then(() => autoView(0));
+  const pendingRender = render();
+  const initialToken = renderToken;
+  void pendingRender.then(() => {
+    if (initialToken === renderToken) autoView(0);
+  });
 
   // Keep the tree fully visible whenever the container changes size (window resize, detail panel, …).
   let pending: number | null = null;
@@ -277,6 +299,7 @@ export function init(
 export function updateData(data: JsonGedcomData, mainId: string | null): void {
   if (!handle || data.indis.length === 0) return;
   json = prepare(data);
+  rootId = mainId;
   handle.setData(json);
   focusId = resolveFocus(focusId ?? mainId);
   void render();
@@ -289,16 +312,38 @@ export function setOptions(next: TreeOptions): TreeOptions {
   if (!json || !chartSvgEl) return options;
   json = prepare(json);
   // Topola only styles boxes on creation, so start from a clean canvas to apply colour/orientation changes.
-  select(chartSvgEl).selectAll('*').remove();
+  clearChart();
   buildHandle();
-  void render().then(() => autoView(0));
+  const pending = render();
+  const token = renderToken;
+  void pending.then(() => {
+    if (token === renderToken && !overview && viewMode === '2d') autoView(0);
+  });
   return options;
 }
 
 /** Re-roots the tree on the given person. */
 export function setMain(personId: string): void {
+  focus(personId);
   if (viewMode === '3d') focus3d(personId);
-  else focus(personId);
+}
+
+function clearChart(): void {
+  if (!chartSvgEl) return;
+  select(chartSvgEl).selectAll('*').interrupt().remove();
+}
+
+/** Clears the person filter without changing preferences, root, or the zoom transform. */
+export async function resetSelection(preferredRoot: string | null): Promise<void> {
+  overview = true;
+  rootId = preferredRoot;
+  userAdjusted = true;
+  renderToken++;
+  outerSvg?.interrupt();
+  clearSelection3d();
+  clearChart();
+  buildHandle();
+  await render();
 }
 
 export function fit(): void {
@@ -323,6 +368,10 @@ export function setViewMode(mode: '2d' | '3d'): void {
   saveOptions();
 }
 
+export async function refresh2d(): Promise<void> {
+  await render();
+}
+
 export { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d };
 
 export function destroy(): void {
@@ -339,6 +388,9 @@ export function destroy(): void {
   zoomBehavior = null;
   handle = null;
   json = null;
+  overview = false;
+  rootId = null;
+  focusId = null;
   dotnet = null;
   viewMode = '2d';
 }

@@ -12,6 +12,8 @@
   <data name="Tree_ZoomIn" xml:space="preserve"><value>Vergrößern</value></data>
   <data name="Tree_ZoomOut" xml:space="preserve"><value>Verkleinern</value></data>
   <data name="Tree_Fit" xml:space="preserve"><value>Einpassen</value></data>
+  <data name="Tree_ShowAll" xml:space="preserve"><value>Alle Personen anzeigen</value></data>
+  <data name="Tree_AllPeople" xml:space="preserve"><value>Alle Personen</value></data>
   <data name="Tree_SetRoot" xml:space="preserve"><value>Als Wurzel festlegen</value></data>
   <data name="Tree_FindPerson" xml:space="preserve"><value>Person suchen…</value></data>
   <data name="Tree_Edit" xml:space="preserve"><value>Bearbeiten</value></data>

@@ -617,7 +617,7 @@ function onPointerUp(event: PointerEvent): void {
   const personId = personAtPointer(event);
   if (!personId) return;
   focusPerson(personId);
-  void dotnet?.invokeMethodAsync('OnPersonClicked', personId);
+  void dotnet?.invokeMethodAsync('OnPersonClicked', personId, true);
 }
 
 function onPointerLeave(): void {
@@ -787,6 +787,7 @@ export function focus3d(personId: string): void {
 }
 
 export function clearSelection3d(): void {
+  cameraTransition = null;
   selectedId = null;
   hoveredId = null;
   if (tooltip) tooltip.hidden = true;

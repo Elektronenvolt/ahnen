@@ -23,6 +23,7 @@
                 <option value="@PersonOption(p)"></option>
             }
         </datalist>
+        <button class="btn" disabled="@(_persons.Count == 0)" @onclick="ResetSelectionAsync">@L["Tree_ShowAll"]</button>
         <div class="chart-types view-modes" role="group" aria-label="@L["Tree_ViewMode"]">
             <button class="chart-type @(_opts.ViewMode == "2d" ? "active" : "")"
                     @onclick='() => SetViewModeAsync("2d")'>@L["Tree_View2D"]</button>
@@ -34,10 +35,14 @@
             <div class="chart-types" role="group" aria-label="@L["Tree_ChartType"]">
                 @foreach (var kind in ChartKinds)
                 {
-                    <button class="chart-type @(_opts.ChartType == kind ? "active" : "")"
+                    <button class="chart-type @(!_allPeople && _opts.ChartType == kind ? "active" : "")"
                             @onclick="() => SetChartTypeAsync(kind)">@L[$"Tree_Chart_{kind}"]</button>
                 }
             </div>
+            @if (_allPeople)
+            {
+                <span role="status">@L["Tree_AllPeople"]</span>
+            }
         }
         <div class="tree-toolbar-spacer"></div>
         @if (_opts.ViewMode == "2d")
@@ -182,6 +187,7 @@
     private string _searchText = "";
     private bool _chartInitialized;
     private bool _settingsOpen;
+    private bool _allPeople;
     private ChartOptions _opts = new();
     private string? _pendingViewMode;
 
@@ -225,7 +231,10 @@
             if (mode == "3d")
                 await Init3dAsync();
             else
+            {
                 await _module.InvokeVoidAsync("destroy3d");
+                await _module.InvokeVoidAsync("refresh2d");
+            }
         }
     }
 
@@ -254,16 +263,23 @@
         });
 
     [JSInvokable]
-    public void OnPersonClicked(string personId) =>
-        _ = InvokeAsync(() =>
+    public Task OnPersonClicked(string personId, bool refocus) =>
+        InvokeAsync(async () =>
         {
             _settingsOpen = false;
             SelectPersonCore(personId);
+            if (refocus)
+            {
+                _allPeople = false;
+                if (_module is not null)
+                    await _module.InvokeVoidAsync("setMain", personId);
+            }
             StateHasChanged();
         });
 
     private void SelectPerson(string personId)
     {
+        _allPeople = false;
         SelectPersonCore(personId);
         _ = _module?.InvokeVoidAsync("setMain", personId);
     }
@@ -303,15 +319,32 @@
             await _module.InvokeVoidAsync("clearSelection3d");
     }
 
+    private async Task ResetSelectionAsync()
+    {
+        _selected = null;
+        _searchText = "";
+        _settingsOpen = false;
+        _allPeople = true;
+        if (_module is not null)
+            await _module.InvokeVoidAsync("resetSelection", Store.RootPersonId);
+    }
+
     private async Task SetAsRootAsync()
     {
         if (_selected is null) return;
+        _allPeople = false;
         Store.SetRootPerson(_selected.Id);
         if (_module is not null)
             await _module.InvokeVoidAsync("setMain", _selected.Id);
     }
 
-    private async Task SetChartTypeAsync(string kind) => await UpdateAsync(o => o.ChartType = kind);
+    private async Task SetChartTypeAsync(string kind)
+    {
+        _allPeople = false;
+        if (_module is not null)
+            await _module.InvokeVoidAsync("setMain", _selected?.Id ?? Store.RootPersonId ?? _persons.FirstOrDefault()?.Id);
+        await UpdateAsync(o => o.ChartType = kind);
+    }
 
     private async Task SetViewModeAsync(string mode)
     {
