@@ -34,7 +34,7 @@ const mocks = {
   'd3-selection': `
     class Selection {
       append() { return new Selection(); }
-      attr() { return this; }
+      attr(name, value) { globalThis.treeHarness.attributes.push([name, value]); return this; }
       text() { return this; }
       selectAll() { return this; }
       each() { return this; }
@@ -60,7 +60,8 @@ const mocks = {
     };
     export function zoom() {
       const behavior = () => {};
-      behavior.scaleExtent = behavior.on = () => behavior;
+      behavior.scaleExtent = () => behavior;
+      behavior.on = (_, callback) => { globalThis.treeHarness.onZoom = callback; return behavior; };
       behavior.transform = (_, t) => {
         globalThis.treeHarness.transforms.push(t);
         globalThis.treeHarness.matrix = { e: t.x, f: t.y, a: t.k };
@@ -70,17 +71,18 @@ const mocks = {
   `,
   './tree-minimap': `
     export class Minimap {
+      constructor(host, pan) { globalThis.treeHarness.panMinimap = pan; }
       setModel() {}
-      setView() {}
+      setView(view) { globalThis.treeHarness.minimapViews.push(view); }
       destroy() {}
     }
   `,
   './tree-overview': `
-    export function applyDetailLevel() {}
+    export function applyDetailLevel(_, scale) { globalThis.treeHarness.detailScales.push(scale); }
     export function markSelected() {}
-    export function overviewModel() { return { bounds: { x: 0, y: 0, width: 100, height: 100 }, rects: [] }; }
-    export function renderOverview(data, root, renderer, horizontal) {
-      globalThis.treeHarness.overviews.push({ data, root, horizontal });
+    export function overviewModel() { return { bounds: { x: -20, y: -10, width: 100, height: 100 }, rects: [] }; }
+    export function renderOverview(data, root, renderer, horizontal, extra) {
+      globalThis.treeHarness.overviews.push({ data, root, horizontal, scale: extra.scale });
       return { size: [2000, 1000], animationPromise: Promise.resolve() };
     }
   `,
@@ -115,6 +117,7 @@ async function initialize() {
   tree.destroy();
   const h = globalThis.treeHarness = {
     renders: [], overviews: [], transforms: [], clears: 0, focus3d: [], calls: [], timers: [],
+    attributes: [], minimapViews: [], detailScales: [],
     matrix: { e: 42, f: -10, a: 0.2 }, saved: null
   };
   globalThis.document = { getElementById: () => ({ innerHTML: '' }) };
@@ -156,6 +159,43 @@ test('reset shows all data, preserves zoom/preferences/root, and suppresses resi
   assert.deepEqual(h.matrix, { e: 42, f: -10, a: 0.2 });
   await tree.resetSelection('root');
   assert.equal(h.overviews.length, 2);
+});
+
+test('content scale is independent of zoom and applied only once across rerenders', async () => {
+  const { h, options } = await initialize();
+  const scales = () => h.attributes.filter(([name, value]) => name === 'transform' && value === 'scale(1.2)');
+  assert.equal(scales().length, 1);
+  tree.setOptions(options);
+  tree.updateData(data, 'root');
+  await tree.resetSelection('root');
+  tree.setViewMode('3d');
+  tree.setViewMode('2d');
+  await tree.refresh2d();
+  assert.equal(scales().length, 1);
+  assert.equal(h.overviews.at(-1).scale, 0.24);
+  h.onZoom({ transform: { k: 0.6, toString: () => 'translate(42,-10) scale(0.6)' } });
+  assert.equal(h.detailScales.at(-1), 0.72);
+});
+
+test('fit uses enlarged bounds in person charts and overview', async () => {
+  const { h } = await initialize();
+  tree.fit();
+  assert.equal(h.transforms.at(-1).k, Math.min(800 / 1200, 600 / 720));
+  await tree.resetSelection('root');
+  tree.fit();
+  assert.equal(h.transforms.at(-1).k, Math.min(800 / 2400, 600 / 1200));
+});
+
+test('minimap viewport and panning convert through the content scale without changing zoom', async () => {
+  const { h } = await initialize();
+  await tree.resetSelection('root');
+  const view = h.minimapViews.at(-1);
+  assert.equal(view.x, -42 / 0.24 - 20);
+  assert.equal(view.y, 10 / 0.24 - 10);
+  assert.equal(view.width, 800 / 0.24);
+  assert.equal(view.height, 600 / 0.24);
+  h.panMinimap(100, 50);
+  assert.deepEqual(h.transforms.at(-1), { x: 400 - 120 * 0.2 * 1.2, y: 300 - 60 * 0.2 * 1.2, k: 0.2 });
 });
 
 test('overview survives settings, data refresh and view switching; selecting restores preferred chart', async () => {
