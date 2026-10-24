@@ -54,7 +54,8 @@ cd Ahnen.Web
 dotnet run
 ```
 
-Open the printed URL (e.g. http://localhost:5205). On first start a small sample family is seeded.
+Open the printed URL (e.g. http://localhost:5205). On first start a 200-person showcase tree is seeded.
+Existing saved trees are never replaced automatically.
 
 ### Data storage
 
@@ -71,17 +72,22 @@ The location can be changed with the `DataDirectory` setting in `appsettings.jso
 `FAMILYTREE_DATA_DIR` environment variable. Writes are atomic (temp file + rename) and every save
 first keeps the previous version as `.bak`.
 
-### Large sample tree
+### Default showcase tree
 
-`Ahnen.Web/seed/sample-200/familytree.json` is a deterministic 200-person tree (1–6 children per
-couple, single parents, people married several times, childless people, adopted children, marriages
-between branches, disconnected families) for trying out the overview. Use it without touching your own
-data:
+`Ahnen.Web/seed/familytree.json` is the single default dataset: a deterministic 200-person tree with
+married and single people, childless couples, one to six children per family, single parents,
+repeated marriages, divorced/separated and unmarried partnerships, adopted children, marriages
+between branches, disconnected families, and isolated people. It showcases the person charts,
+**Show all people** overview, and **3D view**. To try it without touching your saved tree, use a
+separate, empty data directory:
 
 ```bash
-mkdir -p /tmp/ahnen-sample && cp Ahnen.Web/seed/sample-200/familytree.json /tmp/ahnen-sample/
-FAMILYTREE_DATA_DIR=/tmp/ahnen-sample dotnet run --project Ahnen.Web
-# regenerate (seed and size are optional): node Ahnen.Web/tools/generate-sample-tree.mjs <out> 42 200
+FAMILYTREE_DATA_DIR="$(mktemp -d)" dotnet run --project Ahnen.Web
+# regenerate the default seed:
+cd Ahnen.Web
+node tools/generate-sample-tree.mjs
+# optional custom output, random seed, and person count:
+# node tools/generate-sample-tree.mjs <out> 42 200
 ```
 
 Photos are re-encoded on upload (strips EXIF/payloads), downscaled to max 1600 px and stored as
