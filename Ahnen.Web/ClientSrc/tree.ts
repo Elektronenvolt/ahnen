@@ -55,6 +55,7 @@ const DEFAULTS: TreeOptions = {
 /** Below this zoom level an automatic fit centers on the focused person instead of shrinking further. */
 const MIN_AUTO_SCALE = 0.5;
 const MAX_AUTO_SCALE = 1;
+const CONTENT_SCALE = 1.2;
 
 const CHART_TYPES = {
   hourglass: HourglassChart,
@@ -169,10 +170,10 @@ async function render(): Promise<void> {
       data: new JsonDataProvider(json), colors: COLORS[options.colors],
       horizontal: options.horizontal, locale, animate: false, indiCallback: onIndiClick
     }), options.horizontal, {
-      aspect: viewportAspect(), selectedId: overviewSelected, scale: currentTransform().k, onClick: onIndiClick
+      aspect: viewportAspect(), selectedId: overviewSelected, scale: currentTransform().k * CONTENT_SCALE, onClick: onIndiClick
     })
     : renderPersonChart(handle, json, focusId);
-  chartSize = info.size;
+  chartSize = [info.size[0] * CONTENT_SCALE, info.size[1] * CONTENT_SCALE];
   await info.animationPromise.catch(() => undefined);
   if (token !== renderToken) return;
   decorateChart();
@@ -223,8 +224,9 @@ function syncMinimap(): void {
   }
   const { w, h } = viewport();
   const t = currentTransform();
+  const k = t.k * CONTENT_SCALE;
   minimap.setView({
-    x: -t.x / t.k + model.bounds.x, y: -t.y / t.k + model.bounds.y, width: w / t.k, height: h / t.k
+    x: -t.x / k + model.bounds.x, y: -t.y / k + model.bounds.y, width: w / k, height: h / k
   });
 }
 
@@ -234,7 +236,8 @@ function panToLayoutPoint(x: number, y: number): void {
   const { w, h } = viewport();
   const t = currentTransform();
   userAdjusted = true;
-  transitionTo(w / 2 - (x - model.bounds.x) * t.k, h / 2 - (y - model.bounds.y) * t.k, t.k, 0);
+  transitionTo(w / 2 - (x - model.bounds.x) * t.k * CONTENT_SCALE,
+    h / 2 - (y - model.bounds.y) * t.k * CONTENT_SCALE, t.k, 0);
 }
 
 function transitionTo(x: number, y: number, k: number, ms: number): void {
@@ -340,7 +343,8 @@ export function init(
   outerSvg = select(el).append('svg').attr('class', 'topola-svg') as Selection<SVGSVGElement, unknown, null, undefined>;
   outerSvg.append('style').text(new DetailedRenderer({ data: new JsonDataProvider(json) }).getCss());
   zoomLayer = outerSvg.append('g') as Selection<SVGGElement, unknown, null, undefined>;
-  const inner = zoomLayer.append('svg').attr('id', 'topolaChart').attr('overflow', 'visible');
+  const contentLayer = zoomLayer.append('g').attr('class', 'chart-content').attr('transform', `scale(${CONTENT_SCALE})`);
+  const inner = contentLayer.append('svg').attr('id', 'topolaChart').attr('overflow', 'visible');
   chartSvgEl = inner.node() as SVGSVGElement;
 
   zoomBehavior = zoom<SVGSVGElement, unknown>()
@@ -348,7 +352,7 @@ export function init(
     .on('zoom', ev => {
       zoomLayer!.attr('transform', ev.transform.toString());
       if (overview) {
-        applyDetailLevel(chartSvgEl, ev.transform.k);
+        applyDetailLevel(chartSvgEl, ev.transform.k * CONTENT_SCALE);
         syncMinimap();
       }
       if (ev.sourceEvent) userAdjusted = true;

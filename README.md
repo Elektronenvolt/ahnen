@@ -45,6 +45,10 @@ and Three.js (MIT).
   fields and actions wrap to fit smaller screens.
   Person-search suggestions use the same enlarged text; select with the mouse or
   Up/Down and Enter, and dismiss with Escape.
+- **2D chart readability:** chart text and boxes are enlarged by an additional 20% at the same
+  zoom level in all person charts and **Show all people** (including chips, tiles, and generation
+  labels). **Fit to view** still fits the complete chart and may therefore zoom out further.
+  This additional scaling does not affect the toolbar, detail panel, editor, or 3D view.
 - **Languages:** English and German (switcher in the header). Data is always stored untranslated in
   canonical GEDCOM form.
 
