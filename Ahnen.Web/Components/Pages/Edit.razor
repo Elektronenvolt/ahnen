@@ -11,287 +11,310 @@
 
 <PageTitle>@L["AppTitle"] – @L["Nav_Edit"]</PageTitle>
 
-<div class="edit-page">
-    <aside class="person-list-panel">
-        <div class="person-list-tools">
-            <input class="input" placeholder="@L["Edit_Search"]" @bind="_search" @bind:event="oninput" />
-            <button class="btn btn-primary" @onclick="NewPerson">＋ @L["Edit_NewPerson"]</button>
-        </div>
-        <div class="person-list-count">@string.Format(L["Edit_People"], _persons.Count)</div>
-        <ul class="person-list">
-            @foreach (var p in FilteredPersons())
-            {
-                <li class="@(p.Id == _personId ? "active" : "")">
-                    <button @onclick="() => Select(p.Id)">
-                        @if (p.PhotoFile is { } photo)
-                        {
-                            <img class="person-avatar" src="/media/@ChartDataService.ThumbPath(photo)" alt="" />
-                        }
-                        else
-                        {
-                            <span class="person-avatar person-avatar-text @(p.Sex == Sex.F ? "female" : "male")">@UiHelpers.Initials(p)</span>
-                        }
-                        <span class="person-list-name">
-                            @p.DisplayName
-                            <small>@p.LifeYears</small>
-                        </span>
-                    </button>
-                </li>
-            }
-        </ul>
-    </aside>
-
-    <section class="editor-panel">
-        @if (_person is null)
-        {
-            <div class="editor-empty">@L["Edit_SelectPrompt"]</div>
-        }
-        else
-        {
-            <div class="editor-head">
-                <h2>@_person.DisplayName</h2>
-                <div class="editor-head-actions">
-                    <a class="btn" href="/?person=@_person.Id">@L["Edit_ShowInTree"]</a>
-                    <button class="btn btn-danger" @onclick="AskDelete">@L["Btn_Delete"]</button>
-                </div>
+<div class="edit-surface">
+    <div class="edit-page">
+        <aside class="person-list-panel">
+            <div class="person-list-tools">
+                <input class="input" placeholder="@L["Edit_Search"]" @bind="_search" @bind:event="oninput"/>
+                <button class="btn btn-primary" @onclick="NewPerson">＋ @L["Edit_NewPerson"]</button>
             </div>
-
-            <NameEditor @ref="_nameEditor" PersonId="@_person.Id" Revision="_nameRevision"
-                        NamesChanged="RefreshNames" />
-
-            <details class="editor-section" open>
-                <summary>@L["Section_Facts"]</summary>
-                <div class="form-grid">
-                    <label>@L["Field_Sex"]
-                        <select class="input" @bind="_person.Sex" @bind:after="ScheduleSave">
-                            @foreach (var s in Enum.GetValues<Sex>())
+            <div class="person-list-count">@string.Format(L["Edit_People"], _persons.Count)</div>
+            <ul class="person-list">
+                @foreach (var p in FilteredPersons())
+                {
+                    <li class="@(p.Id == _personId ? "active" : "")">
+                        <button @onclick="() => Select(p.Id)">
+                            @if (p.PhotoFile is { } photo)
                             {
-                                <option value="@s">@(L[$"Sex_{s}"])</option>
+                                <img class="person-avatar" src="/media/@ChartDataService.ThumbPath(photo)" alt=""/>
                             }
-                        </select>
-                    </label>
-                    <label>@L["Field_Occupation"]
-                        <input class="input" @bind="_occupation" @bind:after="ScheduleSave" />
-                    </label>
-                </div>
-                <div class="form-grid">
-                    <label>@L["Field_Birth"] – @L["Field_Date"]
-                        <input class="input @(_birthDateError ? "invalid" : "")" @bind="_birthDate" @bind:after="ScheduleSave"
-                               placeholder="@L["Hint_Date"]" />
-                        @if (_birthDateError)
-                        {
-                            <span class="field-error">@L["Validation_BadDate"]</span>
-                        }
-                        else if (NormalizedPreview(_birthDate) is { Length: > 0 } bp)
-                        {
-                            <span class="field-preview">@bp</span>
-                        }
-                    </label>
-                    <label>@L["Field_Birth"] – @L["Field_Place"]
-                        <input class="input" @bind="_birthPlace" @bind:after="ScheduleSave" />
-                    </label>
-                    <label>@L["Field_Death"] – @L["Field_Date"]
-                        <input class="input @(_deathDateError ? "invalid" : "")" @bind="_deathDate" @bind:after="ScheduleSave"
-                               placeholder="@L["Hint_Date"]" />
-                        @if (_deathDateError)
-                        {
-                            <span class="field-error">@L["Validation_BadDate"]</span>
-                        }
-                        @if (_lifeSpanError)
-                        {
-                            <span class="field-error">@L["Validation_BirthAfterDeath"]</span>
-                        }
-                    </label>
-                    <label>@L["Field_Death"] – @L["Field_Place"]
-                        <input class="input" @bind="_deathPlace" @bind:after="ScheduleSave" />
-                    </label>
-                </div>
-                <div class="form-grid">
-                    <label>@L["Field_AddressLines"]
-                        <input class="input" @bind="_addressLine" @bind:after="ScheduleSave" />
-                    </label>
-                    <label>@L["Field_PostalCode"]
-                        <input class="input" @bind="_person.Address.PostalCode" @bind:after="ScheduleSave" />
-                    </label>
-                    <label>@L["Field_City"]
-                        <input class="input" @bind="_person.Address.City" @bind:after="ScheduleSave" />
-                    </label>
-                    <label>@L["Field_Country"]
-                        <input class="input" @bind="_person.Address.Country" @bind:after="ScheduleSave" />
-                    </label>
-                </div>
-                <label class="form-wide">@L["Field_Notes"]
-                    <textarea class="input" rows="3" @bind="_notes" @bind:after="ScheduleSave"></textarea>
-                </label>
-            </details>
+                            else
+                            {
+                                <span
+                                    class="person-avatar person-avatar-text @(p.Sex == Sex.F ? "female" : "male")">@UiHelpers.Initials(p)</span>
+                            }
+                            <span class="person-list-name">
+                            @p.DisplayName
+                                <small>@p.LifeYears</small>
+                        </span>
+                        </button>
+                    </li>
+                }
+            </ul>
+        </aside>
 
-            <details class="editor-section" open>
-                <summary>@L["Section_Photo"]</summary>
-                <div class="photo-row">
-                    @if (_person.PhotoFile is { } photoFile)
-                    {
-                        <img class="photo-preview" src="/media/@photoFile" alt="" />
-                        <button class="btn" @onclick="RemovePhoto">@L["Btn_RemovePhoto"]</button>
-                    }
-                    <label class="btn btn-primary photo-upload">
-                        @L["Btn_UploadPhoto"]
-                        <InputFile OnChange="UploadPhoto" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp" />
-                    </label>
-                    @if (_photoError is not null)
-                    {
-                        <span class="field-error">@_photoError</span>
-                    }
+        <section class="editor-panel">
+            @if (_person is null)
+            {
+                <div class="editor-empty">@L["Edit_SelectPrompt"]</div>
+            }
+            else
+            {
+                <div class="editor-head">
+                    <h2>@_person.DisplayName</h2>
+                    <div class="editor-head-actions">
+                        <a class="btn" href="/?person=@_person.Id">@L["Edit_ShowInTree"]</a>
+                        <button class="btn btn-danger" @onclick="AskDelete">@L["Btn_Delete"]</button>
+                    </div>
                 </div>
-            </details>
 
-            <details class="editor-section" open>
-                <summary>@L["Section_Relationships"]</summary>
+                <NameEditor @ref="_nameEditor" PersonId="@_person.Id" Revision="_nameRevision"
+                            NamesChanged="RefreshNames"/>
 
-                <div class="rel-group">
-                    <h4>@L["Detail_Parents"]</h4>
-                    @foreach (var family in Store.FamiliesAsChild(_personId!))
-                    {
-                        var fam = family;
-                        foreach (var parentId in fam.PartnerIds)
-                        {
-                            var parent = Store.GetPerson(parentId);
-                            if (parent is null) continue;
-                            <div class="rel-row">
-                                <button class="link-button" @onclick="() => Select(parent.Id)">@parent.DisplayName</button>
-                                <span class="relation-years">@parent.LifeYears</span>
-                                <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => UnlinkParent(fam.Id, parent.Id)">✕</button>
-                            </div>
-                        }
-                        var childRef = fam.ChildRefs.First(c => c.PersonId == _personId);
-                        <label class="rel-pedigree">@L["Field_Pedigree"]
-                            <select class="input" value="@childRef.Pedigree" @onchange="e => SetPedigree(fam.Id, e.Value!.ToString()!)">
-                                @foreach (var pd in Enum.GetValues<Pedigree>())
+                <details class="editor-section" open>
+                    <summary>@L["Section_Facts"]</summary>
+                    <div class="form-grid">
+                        <label>@L["Field_Sex"]
+                            <select class="input" @bind="_person.Sex" @bind:after="ScheduleSave">
+                                @foreach (var s in Enum.GetValues<Sex>())
                                 {
-                                    <option value="@pd">@(L[$"Pedi_{pd}"])</option>
+                                    <option value="@s">@(L[$"Sex_{s}"])</option>
                                 }
                             </select>
                         </label>
-                    }
-                    <div class="rel-actions">
-                        @if (CanAddParent())
+                        <label>@L["Field_Occupation"]
+                            <input class="input" @bind="_occupation" @bind:after="ScheduleSave"/>
+                        </label>
+                    </div>
+                    <div class="form-grid">
+                        <label>@L["Field_Birth"] – @L["Field_Date"]
+                            <input class="input @(_birthDateError ? "invalid" : "")" @bind="_birthDate"
+                                   @bind:after="ScheduleSave"
+                                   placeholder="@L["Hint_Date"]"/>
+                            @if (_birthDateError)
+                            {
+                                <span class="field-error">@L["Validation_BadDate"]</span>
+                            }
+                            else if (NormalizedPreview(_birthDate) is { Length: > 0 } bp)
+                            {
+                                <span class="field-preview">@bp</span>
+                            }
+                        </label>
+                        <label>@L["Field_Birth"] – @L["Field_Place"]
+                            <input class="input" @bind="_birthPlace" @bind:after="ScheduleSave"/>
+                        </label>
+                        <label>@L["Field_Death"] – @L["Field_Date"]
+                            <input class="input @(_deathDateError ? "invalid" : "")" @bind="_deathDate"
+                                   @bind:after="ScheduleSave"
+                                   placeholder="@L["Hint_Date"]"/>
+                            @if (_deathDateError)
+                            {
+                                <span class="field-error">@L["Validation_BadDate"]</span>
+                            }
+                            @if (_lifeSpanError)
+                            {
+                                <span class="field-error">@L["Validation_BirthAfterDeath"]</span>
+                            }
+                        </label>
+                        <label>@L["Field_Death"] – @L["Field_Place"]
+                            <input class="input" @bind="_deathPlace" @bind:after="ScheduleSave"/>
+                        </label>
+                    </div>
+                    <div class="form-grid">
+                        <label>@L["Field_AddressLines"]
+                            <input class="input" @bind="_addressLine" @bind:after="ScheduleSave"/>
+                        </label>
+                        <label>@L["Field_PostalCode"]
+                            <input class="input" @bind="_person.Address.PostalCode" @bind:after="ScheduleSave"/>
+                        </label>
+                        <label>@L["Field_City"]
+                            <input class="input" @bind="_person.Address.City" @bind:after="ScheduleSave"/>
+                        </label>
+                        <label>@L["Field_Country"]
+                            <input class="input" @bind="_person.Address.Country" @bind:after="ScheduleSave"/>
+                        </label>
+                    </div>
+                    <label class="form-wide">@L["Field_Notes"]
+                        <textarea class="input" rows="3" @bind="_notes" @bind:after="ScheduleSave"></textarea>
+                    </label>
+                </details>
+
+                <details class="editor-section" open>
+                    <summary>@L["Section_Photo"]</summary>
+                    <div class="photo-row">
+                        @if (_person.PhotoFile is { } photoFile)
                         {
-                            <button class="btn btn-small" @onclick='() => OpenPicker("father")'>＋ @L["Btn_AddFather"]</button>
-                            <button class="btn btn-small" @onclick='() => OpenPicker("mother")'>＋ @L["Btn_AddMother"]</button>
+                            <img class="photo-preview" src="/media/@photoFile" alt=""/>
+                            <button class="btn" @onclick="RemovePhoto">@L["Btn_RemovePhoto"]</button>
+                        }
+                        <label class="btn btn-primary photo-upload">
+                            @L["Btn_UploadPhoto"]
+                            <InputFile OnChange="UploadPhoto" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp"/>
+                        </label>
+                        @if (_photoError is not null)
+                        {
+                            <span class="field-error">@_photoError</span>
                         }
                     </div>
-                    <div class="hint">@L["Hint_Siblings"]</div>
-                </div>
+                </details>
 
-                <div class="rel-group">
-                    <h4>@L["Detail_Partners"] / @L["Detail_Children"]</h4>
-                    @foreach (var family in Store.FamiliesAsPartner(_personId!))
-                    {
-                        var fam = family;
-                        var partner = fam.OtherPartner(_personId!) is { } pid ? Store.GetPerson(pid) : null;
-                        <div class="family-card">
-                            <div class="rel-row">
-                                @if (partner is not null)
-                                {
-                                    <button class="link-button" @onclick="() => Select(partner.Id)">@partner.DisplayName</button>
-                                    <span class="relation-years">@partner.LifeYears</span>
-                                    <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => UnlinkPartner(fam.Id, partner.Id)">✕</button>
-                                }
-                                else
-                                {
-                                    <em class="muted">—</em>
-                                }
-                            </div>
-                            <div class="form-grid">
-                                <label>@L["Field_Status"]
-                                    <select class="input" value="@FamilyStatus.GetStatus(fam)"
-                                            @onchange="e => SetStatus(fam.Id, e.Value!.ToString()!)">
-                                        @foreach (var statusCode in FamilyStatus.Options)
-                                        {
-                                            <option value="@statusCode">@(L[$"Fam_{statusCode}"])</option>
-                                        }
-                                    </select>
-                                </label>
-                                @if (FamilyStatus.GetStatus(fam) is not "NONE" and not "ENGA")
-                                {
-                                    <label>@L["Field_MarriageDate"]
-                                        <input class="input" value="@fam.Marriage?.Date"
-                                               @onchange="e => SetMarriageDate(fam.Id, e.Value!.ToString())"
-                                               placeholder="@L["Hint_Date"]" />
-                                    </label>
-                                    <label>@L["Field_MarriagePlace"]
-                                        <input class="input" value="@fam.Marriage?.Place"
-                                               @onchange="e => SetMarriagePlace(fam.Id, e.Value!.ToString())" />
-                                    </label>
-                                }
-                            </div>
-                            <div class="family-children">
-                                @foreach (var childRef in fam.ChildRefs)
-                                {
-                                    var cr = childRef;
-                                    var child = Store.GetPerson(cr.PersonId);
-                                    if (child is null) continue;
-                                    <div class="rel-row">
-                                        <button class="link-button" @onclick="() => Select(child.Id)">@child.DisplayName</button>
-                                        <span class="relation-years">@child.LifeYears</span>
-                                        <select class="input input-compact" value="@cr.Pedigree"
-                                                @onchange="e => SetChildPedigree(fam.Id, cr.PersonId, e.Value!.ToString()!)">
-                                            @foreach (var pd in Enum.GetValues<Pedigree>())
+                <details class="editor-section" open>
+                    <summary>@L["Section_Relationships"]</summary>
+
+                    <div class="rel-group">
+                        <h4>@L["Detail_Parents"]</h4>
+                        @foreach (var family in Store.FamiliesAsChild(_personId!))
+                        {
+                            var fam = family;
+                            foreach (var parentId in fam.PartnerIds)
+                            {
+                                var parent = Store.GetPerson(parentId);
+                                if (parent is null) continue;
+                                <div class="rel-row">
+                                    <button class="link-button"
+                                            @onclick="() => Select(parent.Id)">@parent.DisplayName</button>
+                                    <span class="relation-years">@parent.LifeYears</span>
+                                    <button class="btn-icon" title="@L["Btn_Unlink"]"
+                                            @onclick="() => UnlinkParent(fam.Id, parent.Id)">✕
+                                    </button>
+                                </div>
+                            }
+
+                            var childRef = fam.ChildRefs.First(c => c.PersonId == _personId);
+                            <label class="rel-pedigree">@L["Field_Pedigree"]
+                                <select class="input" value="@childRef.Pedigree"
+                                        @onchange="e => SetPedigree(fam.Id, e.Value!.ToString()!)">
+                                    @foreach (var pd in Enum.GetValues<Pedigree>())
+                                    {
+                                        <option value="@pd">@(L[$"Pedi_{pd}"])</option>
+                                    }
+                                </select>
+                            </label>
+                        }
+                        <div class="rel-actions">
+                            @if (CanAddParent())
+                            {
+                                <button class="btn btn-small" @onclick='() => OpenPicker("father")'>
+                                    ＋ @L["Btn_AddFather"]</button>
+                                <button class="btn btn-small" @onclick='() => OpenPicker("mother")'>
+                                    ＋ @L["Btn_AddMother"]</button>
+                            }
+                        </div>
+                        <div class="hint">@L["Hint_Siblings"]</div>
+                    </div>
+
+                    <div class="rel-group">
+                        <h4>@L["Detail_Partners"] / @L["Detail_Children"]</h4>
+                        @foreach (var family in Store.FamiliesAsPartner(_personId!))
+                        {
+                            var fam = family;
+                            var partner = fam.OtherPartner(_personId!) is { } pid ? Store.GetPerson(pid) : null;
+                            <div class="family-card">
+                                <div class="rel-row">
+                                    @if (partner is not null)
+                                    {
+                                        <button class="link-button"
+                                                @onclick="() => Select(partner.Id)">@partner.DisplayName</button>
+                                        <span class="relation-years">@partner.LifeYears</span>
+                                        <button class="btn-icon" title="@L["Btn_Unlink"]"
+                                                @onclick="() => UnlinkPartner(fam.Id, partner.Id)">✕
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <em class="muted">—</em>
+                                    }
+                                </div>
+                                <div class="form-grid">
+                                    <label>@L["Field_Status"]
+                                        <select class="input" value="@FamilyStatus.GetStatus(fam)"
+                                                @onchange="e => SetStatus(fam.Id, e.Value!.ToString()!)">
+                                            @foreach (var statusCode in FamilyStatus.Options)
                                             {
-                                                <option value="@pd">@(L[$"Pedi_{pd}"])</option>
+                                                <option value="@statusCode">@(L[$"Fam_{statusCode}"])</option>
                                             }
                                         </select>
-                                        <button class="btn-icon" title="@L["Btn_Unlink"]" @onclick="() => UnlinkChild(fam.Id, cr.PersonId)">✕</button>
-                                    </div>
-                                }
-                                <button class="btn btn-small" @onclick='() => OpenPicker("child", fam.Id)'>＋ @L["Btn_AddChild"]</button>
+                                    </label>
+                                    @if (FamilyStatus.GetStatus(fam) is not "NONE" and not "ENGA")
+                                    {
+                                        <label>@L["Field_MarriageDate"]
+                                            <input class="input" value="@fam.Marriage?.Date"
+                                                   @onchange="e => SetMarriageDate(fam.Id, e.Value!.ToString())"
+                                                   placeholder="@L["Hint_Date"]"/>
+                                        </label>
+                                        <label>@L["Field_MarriagePlace"]
+                                            <input class="input" value="@fam.Marriage?.Place"
+                                                   @onchange="e => SetMarriagePlace(fam.Id, e.Value!.ToString())"/>
+                                        </label>
+                                    }
+                                </div>
+                                <div class="family-children">
+                                    @foreach (var childRef in fam.ChildRefs)
+                                    {
+                                        var cr = childRef;
+                                        var child = Store.GetPerson(cr.PersonId);
+                                        if (child is null) continue;
+                                        <div class="rel-row">
+                                            <button class="link-button"
+                                                    @onclick="() => Select(child.Id)">@child.DisplayName</button>
+                                            <span class="relation-years">@child.LifeYears</span>
+                                            <select class="input input-compact" value="@cr.Pedigree"
+                                                    @onchange="e => SetChildPedigree(fam.Id, cr.PersonId, e.Value!.ToString()!)">
+                                                @foreach (var pd in Enum.GetValues<Pedigree>())
+                                                {
+                                                    <option value="@pd">@(L[$"Pedi_{pd}"])</option>
+                                                }
+                                            </select>
+                                            <button class="btn-icon" title="@L["Btn_Unlink"]"
+                                                    @onclick="() => UnlinkChild(fam.Id, cr.PersonId)">✕
+                                            </button>
+                                        </div>
+                                    }
+                                    <button class="btn btn-small" @onclick='() => OpenPicker("child", fam.Id)'>
+                                        ＋ @L["Btn_AddChild"]</button>
+                                </div>
                             </div>
-                        </div>
-                    }
-                    <div class="rel-actions">
-                        <button class="btn btn-small" @onclick='() => OpenPicker("partner")'>＋ @L["Btn_AddPartner"]</button>
-                        @if (!Store.FamiliesAsPartner(_personId!).Any())
-                        {
-                            <button class="btn btn-small" @onclick='() => OpenPicker("child")'>＋ @L["Btn_AddChild"]</button>
                         }
+                        <div class="rel-actions">
+                            <button class="btn btn-small" @onclick='() => OpenPicker("partner")'>
+                                ＋ @L["Btn_AddPartner"]</button>
+                            @if (!Store.FamiliesAsPartner(_personId!).Any())
+                            {
+                                <button class="btn btn-small" @onclick='() => OpenPicker("child")'>
+                                    ＋ @L["Btn_AddChild"]</button>
+                            }
+                        </div>
                     </div>
+                </details>
+            }
+        </section>
+    </div>
+
+    <PersonPicker Visible="_pickerVisible" Title="@_pickerTitle" DefaultSex="_pickerSex"
+                  ExcludeIds="PickerExcludes()" OnResult="PickerResult"/>
+
+    @if (_confirmDelete)
+    {
+        <div class="modal-backdrop" @onclick="() => _confirmDelete = false">
+            <div class="modal-card" @onclick:stopPropagation>
+                <p>@string.Format(L["Confirm_Delete"], _person?.DisplayName, DeleteImpact())</p>
+                <div class="modal-actions">
+                    <button class="btn" @onclick="() => _confirmDelete = false">@L["Btn_Cancel"]</button>
+                    <button class="btn btn-danger" @onclick="DoDelete">@L["Btn_Delete"]</button>
                 </div>
-            </details>
-        }
-    </section>
-</div>
-
-<PersonPicker Visible="_pickerVisible" Title="@_pickerTitle" DefaultSex="_pickerSex"
-              ExcludeIds="PickerExcludes()" OnResult="PickerResult" />
-
-@if (_confirmDelete)
-{
-    <div class="modal-backdrop" @onclick="() => _confirmDelete = false">
-        <div class="modal-card" @onclick:stopPropagation>
-            <p>@string.Format(L["Confirm_Delete"], _person?.DisplayName, DeleteImpact())</p>
-            <div class="modal-actions">
-                <button class="btn" @onclick="() => _confirmDelete = false">@L["Btn_Cancel"]</button>
-                <button class="btn btn-danger" @onclick="DoDelete">@L["Btn_Delete"]</button>
             </div>
         </div>
-    </div>
-}
+    }
 
-@if (_errorMessage is not null)
-{
-    <div class="toast toast-error" @onclick="() => _errorMessage = null">
-        <span>⚠ @_errorMessage</span>
-    </div>
-}
+    @if (_errorMessage is not null)
+    {
+        <div class="toast toast-error" @onclick="() => _errorMessage = null">
+            <span>⚠ @_errorMessage</span>
+        </div>
+    }
 
-@if (_toast is not null)
-{
-    <div class="toast">
-        <span>@_toast ✓</span>
-        <button class="link-button" @onclick="UndoLast">@L["Btn_Undo"]</button>
-    </div>
-}
+    @if (_toast is not null)
+    {
+        <div class="toast">
+            <span>@_toast ✓</span>
+            <button class="link-button" @onclick="UndoLast">@L["Btn_Undo"]</button>
+        </div>
+    }
+
+</div>
 
 @code {
+
     [SupplyParameterFromQuery(Name = "person")]
     public string? PersonQuery { get; set; }
 
@@ -422,6 +445,7 @@
             var dd = GedcomDate.Approximate(death);
             _lifeSpanError = b is not null && dd is not null && b > dd;
         }
+
         if (_birthDateError || _deathDateError || _lifeSpanError)
         {
             StateHasChanged();
@@ -449,6 +473,7 @@
             if (ev is not null) _person.Events.Remove(ev);
             return;
         }
+
         ev ??= _person.GetOrAddEvent(type);
         ev.Date = date;
         ev.Place = place;
@@ -487,6 +512,7 @@
             _photoError = $"✗ {file.Name}";
             return;
         }
+
         try
         {
             await using var stream = file.OpenReadStream(PhotoService.MaxUploadBytes);
@@ -555,12 +581,14 @@
                     Store.AddChild(_personId, pickedId, familyId: _pickerFamilyId);
                     break;
             }
+
             ShowToast(L["Toast_Saved"]);
         }
         catch (InvalidOperationException ex)
         {
             _errorMessage = ex.Message;
         }
+
         Select(_personId);
     }
 
@@ -620,6 +648,7 @@
             marr = new FamilyEvent { Type = FamilyEventType.MARR };
             family.Events.Insert(0, marr);
         }
+
         marr.Date = normalized;
         Store.UpdateFamily(family);
         ShowToast(L["Toast_Saved"]);
@@ -635,6 +664,7 @@
             marr = new FamilyEvent { Type = FamilyEventType.MARR };
             family.Events.Insert(0, marr);
         }
+
         marr.Place = Trim(place ?? "");
         Store.UpdateFamily(family);
         ShowToast(L["Toast_Saved"]);
@@ -648,7 +678,7 @@
     {
         if (_personId is null) return 0;
         return Store.FamiliesAsPartner(_personId).Sum(f => f.PartnerIds.Count - 1 + f.ChildRefs.Count)
-             + Store.FamiliesAsChild(_personId).Sum(f => f.PartnerIds.Count);
+               + Store.FamiliesAsChild(_personId).Sum(f => f.PartnerIds.Count);
     }
 
     private void DoDelete()
@@ -704,4 +734,5 @@
         _saveTimer?.Dispose();
         _toastTimer?.Dispose();
     }
+
 }

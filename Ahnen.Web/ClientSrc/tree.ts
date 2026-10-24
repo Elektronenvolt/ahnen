@@ -23,6 +23,10 @@ import type { OverviewFam } from './tree-overview-layout';
 export type ChartKind = 'hourglass' | 'relatives' | 'ancestors' | 'descendants';
 export type ColorMode = 'none' | 'sex' | 'generation';
 
+export function scrollSearchOption(id: string): void {
+  document.getElementById(id)?.scrollIntoView({ block: 'nearest' });
+}
+
 export interface TreeOptions {
   chartType: ChartKind;
   colors: ColorMode;

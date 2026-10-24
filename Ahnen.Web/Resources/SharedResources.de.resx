@@ -16,6 +16,7 @@
   <data name="Tree_AllPeople" xml:space="preserve"><value>Alle Personen</value></data>
   <data name="Tree_SetRoot" xml:space="preserve"><value>Als Wurzel festlegen</value></data>
   <data name="Tree_FindPerson" xml:space="preserve"><value>Person suchen…</value></data>
+  <data name="Tree_NoMatches" xml:space="preserve"><value>Keine passenden Personen.</value></data>
   <data name="Tree_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="Tree_RelationTo" xml:space="preserve"><value>Verwandtschaft zu {0}:</value></data>
   <data name="Tree_Empty" xml:space="preserve"><value>Noch keine Personen – lege deine Familie auf der Bearbeiten-Seite an.</value></data>

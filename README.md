@@ -40,7 +40,11 @@ and Three.js (MIT).
     (e.g. *great-uncle / Urgroßonkel*); set any person as root.
 - **Edit page** (`/edit`) — master-detail editor: searchable person list, names/facts/photo/relationship
   sections, auto-save with undo toast, smart date input, photo upload, and safe delete with impact
-  preview.
+  preview. Interface text and control padding are enlarged by 25% for readability, including
+  the editor, person lists, dialogs, header, person search, and 2D/3D tree controls;
+  fields and actions wrap to fit smaller screens.
+  Person-search suggestions use the same enlarged text; select with the mouse or
+  Up/Down and Enter, and dismiss with Escape.
 - **Languages:** English and German (switcher in the header). Data is always stored untranslated in
   canonical GEDCOM form.
 
