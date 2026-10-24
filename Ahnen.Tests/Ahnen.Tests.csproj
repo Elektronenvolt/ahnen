@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\Ahnen.Web\seed\sample-200\familytree.json" Link="sample-200\familytree.json"
+    <None Include="..\Ahnen.Web\seed\familytree.json" Link="seed\familytree.json"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -7,7 +7,7 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Ahnen.Tests;
 
-/// <summary>The committed 200-person development tree must stay loadable, legal and chartable.</summary>
+/// <summary>The default 200-person seed must stay loadable, legal and chartable.</summary>
 public class SampleTreeTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "ahnen-sample-" + Guid.NewGuid().ToString("N"));
@@ -19,16 +19,13 @@ public class SampleTreeTests : IDisposable
 
     private FamilyTreeStore LoadSample()
     {
-        Directory.CreateDirectory(_dir);
-        File.Copy(Path.Combine(AppContext.BaseDirectory, "sample-200", "familytree.json"),
-            Path.Combine(_dir, "familytree.json"));
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["DataDirectory"] = _dir }).Build();
-        return new FamilyTreeStore(config, new SampleEnv(_dir));
+        return new FamilyTreeStore(config, new SampleEnv(AppContext.BaseDirectory));
     }
 
     [Fact]
-    public void Sample_tree_loads_validates_and_maps_to_chart_data()
+    public void Default_seed_loads_validates_and_maps_to_chart_data()
     {
         var store = LoadSample();
         Assert.Equal(200, store.Persons.Count);
@@ -46,6 +43,34 @@ public class SampleTreeTests : IDisposable
         Assert.Contains(data.Indis, i => i.Fams.Count >= 2);
         Assert.All(data.Indis, i => Assert.NotNull(i.BirthYear));
         JsonSerializer.Serialize(data);
+    }
+
+    [Fact]
+    public void Default_seed_is_persisted_on_first_run()
+    {
+        var store = LoadSample();
+        var saved = JsonSerializer.Deserialize<FamilyTreeData>(
+            File.ReadAllText(Path.Combine(_dir, "familytree.json")),
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+
+        Assert.Equal(200, saved.Persons.Count);
+        Assert.Equal(store.RootPersonId, saved.RootPersonId);
+        Assert.Equal(store.Families.Count, saved.Families.Count);
+        Assert.Equal(200, LoadSample().Persons.Count);
+    }
+
+    [Fact]
+    public void Existing_data_is_not_replaced_by_default_seed()
+    {
+        var store = LoadSample();
+        var added = store.AddPerson("Saved", "Person", Sex.U);
+        store.SetRootPerson(added.Id);
+
+        var reloaded = LoadSample();
+
+        Assert.Equal(201, reloaded.Persons.Count);
+        Assert.Equal(added.Id, reloaded.RootPersonId);
+        Assert.Equal("Saved", reloaded.GetPerson(added.Id)!.PrimaryName.Given);
     }
 
     private sealed class SampleEnv(string root) : IWebHostEnvironment
