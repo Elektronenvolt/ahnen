@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
 import test, { after } from 'node:test';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { buildSync } from 'esbuild';
-import { generateSampleTree } from '../tools/generate-sample-tree.mjs';
 
 const directory = mkdtempSync(join(tmpdir(), 'ahnen-overview-layout-tests-'));
 const output = join(directory, 'layout.mjs');
@@ -75,7 +74,7 @@ function assertEveryoneOnce(layout, input) {
   assert.equal(new Set(layout.cards.map(card => card.id)).size, layout.cards.length, 'card ids are unique');
 }
 
-const sample = toTopola(generateSampleTree(42, 200));
+const sample = toTopola(JSON.parse(readFileSync(new URL('../seed/familytree.json', import.meta.url), 'utf8')));
 
 for (const horizontal of [false, true])
   test(`200-person tree (${horizontal ? 'horizontal' : 'vertical'}): complete, tidy and compact`, () => {

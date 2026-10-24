@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test, { after } from 'node:test';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -23,6 +23,26 @@ const ordinary = data(['grandpa', 'grandma', 'father', 'mother', 'kid', 'sibling
   family('f1', ['grandpa', 'grandma'], ['father']),
   family('f2', ['father', 'mother'], ['kid', 'sibling'])
 ]);
+
+test('default showcase retains all 200 people and every family link in 3D', () => {
+  const seed = JSON.parse(readFileSync(new URL('../seed/familytree.json', import.meta.url), 'utf8'));
+  const input = {
+    indis: seed.persons.map(p => ({ id: p.id, sex: p.sex })),
+    fams: seed.families.map(f => family(f.id, f.partnerIds, f.childRefs.map(c => c.personId)))
+  };
+  const layout = createTreeLayout(input, seed.rootPersonId);
+  assert.equal(layout.positions.size, 200);
+  assert.deepEqual([...layout.positions.keys()].sort(), seed.persons.map(p => p.id).sort());
+  assert.equal(layout.families.length, seed.families.length);
+  for (const f of seed.families) {
+    const link = layout.families.find(link => link.id === f.id);
+    assert.deepEqual([...link.partners].sort(), [...f.partnerIds].sort());
+    assert.deepEqual([...link.children].sort(), f.childRefs.map(c => c.personId).sort());
+  }
+  for (const position of layout.positions.values())
+    for (const axis of ['x', 'y', 'z']) assert(Number.isFinite(position[axis]));
+  assert(new Set([...layout.positions.values()].map(p => p.component)).size > 1);
+});
 
 test('ordinary generations have correct signed levels, shared partner ranks, and terrace heights', () => {
   const layout = createTreeLayout(ordinary, 'father');
