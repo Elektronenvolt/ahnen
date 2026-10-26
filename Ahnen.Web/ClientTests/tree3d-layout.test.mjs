@@ -13,7 +13,46 @@ buildSync({
   entryPoints: [fileURLToPath(new URL('../ClientSrc/tree3d-layout.ts', import.meta.url))],
   bundle: true, platform: 'node', format: 'esm', outfile: output
 });
-const { createTreeLayout, generationIdentifier, neighborhood, TERRACE_STEP } = await import(pathToFileURL(output).href);
+const {
+  createTreeLayout, generationIdentifier, neighborhood, TERRACE_STEP,
+  PERSON_SCALE, PERSON_LABEL, PERSON_BOUNDS, PLATFORM_WIDTH, TERRACE_SPACING
+} = await import(pathToFileURL(output).href);
+
+function assertItemClearances(layout) {
+  const epsilon = 1e-9;
+  for (const cluster of layout.clusters) {
+    const positions = cluster.people.map(id => layout.positions.get(id)).sort((a, b) => a.z - b.z);
+    for (const position of positions) {
+      assert(position.x + PERSON_BOUNDS.minX > cluster.x - PLATFORM_WIDTH / 2);
+      assert(position.x + PERSON_BOUNDS.maxX < cluster.x + PLATFORM_WIDTH / 2);
+      assert(position.z + PERSON_BOUNDS.minZ > cluster.z - cluster.depth / 2);
+      assert(position.z + PERSON_BOUNDS.maxZ < cluster.z + cluster.depth / 2);
+    }
+    for (let i = 1; i < positions.length; i++)
+      assert(positions[i].z + PERSON_BOUNDS.minZ > positions[i - 1].z + PERSON_BOUNDS.maxZ);
+  }
+  for (const a of layout.clusters)
+    for (const b of layout.clusters)
+      if (a !== b)
+        assert(
+          Math.abs(a.x - b.x) + epsilon >= PLATFORM_WIDTH ||
+          Math.abs(a.z - b.z) + epsilon >= (a.depth + b.depth) / 2
+        );
+}
+
+test('3D person sizing doubles the original card while retaining terrace height and horizontal clearance', () => {
+  assert.equal(PERSON_SCALE, 2);
+  assert.equal(PERSON_LABEL.width * PERSON_SCALE, 5.8);
+  assert.equal(PERSON_LABEL.depth * PERSON_SCALE, 1.92);
+  assert.equal(TERRACE_STEP, 1.35);
+  assert.equal(PERSON_LABEL.x, 0);
+  assert.equal(PERSON_LABEL.z, 1.13);
+  assert.equal(PLATFORM_WIDTH, 8.8);
+  assert.equal(TERRACE_SPACING, 10.4);
+  assert(Math.abs(TERRACE_SPACING - PLATFORM_WIDTH - 1.6) < 1e-9);
+  assertItemClearances(createTreeLayout(ordinary, 'father'));
+  assertItemClearances(createTreeLayout(data(['alone', 'separate'], []), 'alone'));
+});
 
 const family = (id, partners, children) =>
   ({ id, husb: partners[0], wife: partners[1], children });
@@ -31,6 +70,7 @@ test('default showcase retains all 200 people and every family link in 3D', () =
     fams: seed.families.map(f => family(f.id, f.partnerIds, f.childRefs.map(c => c.personId)))
   };
   const layout = createTreeLayout(input, seed.rootPersonId);
+  assertItemClearances(layout);
   assert.equal(layout.positions.size, 200);
   assert.deepEqual([...layout.positions.keys()].sort(), seed.persons.map(p => p.id).sort());
   assert.equal(layout.families.length, seed.families.length);
@@ -174,11 +214,12 @@ test('layout is deterministic under person and family input reordering and never
 test('clusters never overlap within a generation, even with large sibling groups', () => {
   const kids = Array.from({ length: 80 }, (_, i) => `kid${i}`);
   const layout = createTreeLayout(data(['p', 'q', ...kids], [family('f', ['p', 'q'], kids)]), 'p');
+  assertItemClearances(layout);
   for (const cluster of layout.clusters) {
     for (const id of cluster.people) {
       const position = layout.positions.get(id);
-      assert(position.z - 0.6 > cluster.z - cluster.depth / 2);
-      assert(position.z + 1.65 < cluster.z + cluster.depth / 2);
+      assert(position.z + PERSON_BOUNDS.minZ > cluster.z - cluster.depth / 2);
+      assert(position.z + PERSON_BOUNDS.maxZ < cluster.z + cluster.depth / 2);
     }
   }
   for (const a of layout.clusters)

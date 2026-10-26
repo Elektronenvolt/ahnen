@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { JsonGedcomData, JsonIndi } from 'topola';
 import {
-  createTreeLayout, generationIdentifier, neighborhood, PLATFORM_WIDTH,
+  createTreeLayout, generationIdentifier, neighborhood, PLATFORM_WIDTH, PERSON_SCALE, PERSON_LABEL,
   type PersonPosition, type TreeLayout, type PersonRole
 } from './tree3d-layout';
 
@@ -52,8 +52,6 @@ interface CameraTransition {
   duration: number;
 }
 
-const LABEL_WIDTH = 2.9;
-const LABEL_DEPTH = 0.96;
 const FAMILY_COLORS = [0x5b74b8, 0x8c5ab4, 0x3c8a79, 0xc0783f, 0xb74f63];
 
 let container: HTMLElement | null = null;
@@ -138,7 +136,7 @@ function makePersonLabel(person: JsonIndi): THREE.CanvasTexture {
 
   ctx.fillStyle = '#1f2937';
   ctx.textAlign = 'left';
-  ctx.font = 'bold 38px system-ui, sans-serif';
+  ctx.font = 'bold 57px system-ui, sans-serif';
   let shownName = name;
   while (ctx.measureText(shownName).width > 480 && shownName.length > 8)
     shownName = `${shownName.slice(0, -4)}…`;
@@ -236,6 +234,7 @@ function disposeContent(): void {
 function addPersonFigure(person: JsonIndi, position: PersonPosition): void {
   if (!content) return;
   const figure = new THREE.Group();
+  figure.scale.setScalar(PERSON_SCALE);
   figure.position.set(position.x, position.y + 0.03, position.z);
   figure.userData.personId = person.id;
 
@@ -278,7 +277,7 @@ function addPersonFigure(person: JsonIndi, position: PersonPosition): void {
   focusRings.set(person.id, focusRing);
 
   const label = new THREE.Mesh(
-    new THREE.PlaneGeometry(LABEL_WIDTH, LABEL_DEPTH),
+    new THREE.PlaneGeometry(PERSON_LABEL.width, PERSON_LABEL.depth),
     new THREE.MeshBasicMaterial({
       map: makePersonLabel(person),
       transparent: true,
@@ -287,7 +286,7 @@ function addPersonFigure(person: JsonIndi, position: PersonPosition): void {
     })
   );
   label.rotation.x = -Math.PI / 2;
-  label.position.set(0.55, 0.015, 1.13);
+  label.position.set(PERSON_LABEL.x, 0.015, PERSON_LABEL.z);
   figure.add(label);
 
   const meshes = [base, body, head];
@@ -314,7 +313,7 @@ function addFamilyLinks(tree: TreeLayout): void {
     partnerGroup.userData.people = partners;
     for (const parent of parents) {
       partnerGroup.add(makeLine([
-        new THREE.Vector3(parent.x + 0.5, parent.y + 0.23, parent.z),
+        new THREE.Vector3(parent.x + 0.5 * PERSON_SCALE, parent.y + 0.23, parent.z),
         new THREE.Vector3(junction.x, parent.y + 0.23, parent.z),
         new THREE.Vector3(junction.x, junction.y, parent.z),
         junction
@@ -332,7 +331,7 @@ function addFamilyLinks(tree: TreeLayout): void {
     // Each child has one directed branch from the union, rather than one per parent.
     children.forEach((childId, index) => {
       const child = tree.positions.get(childId)!;
-      const childPort = new THREE.Vector3(child.x - 0.65, child.y + 0.24, child.z);
+      const childPort = new THREE.Vector3(child.x - 0.65 * PERSON_SCALE, child.y + 0.24, child.z);
       const laneX = junction.x + 0.65 + (index % 4) * 0.12;
       const branch = new THREE.Group();
       branch.userData.familyId = family.id;
@@ -475,6 +474,7 @@ function updateSelection(): void {
         sprite.removeFromParent();
       }
       sprite = textSprite(text, '#1e3a5f', 2.4);
+      sprite.scale.divideScalar(PERSON_SCALE);
       sprite.position.set(0, 1.4, 0);
       sprite.userData.text = text;
       sprite.userData.kind = 'role';
@@ -551,7 +551,7 @@ function focusPerson(personId: string, animate = true): void {
   if (!figure || !camera || !controls) return;
   selectedId = personId;
   updateSelection();
-  const target = figure.position.clone().add(new THREE.Vector3(0, 0.48, 0));
+  const target = figure.position.clone().add(new THREE.Vector3(0, 0.48 * PERSON_SCALE, 0));
   const offset = camera.position.clone().sub(controls.target);
   const targetPosition = target.clone().add(offset);
   cameraTransition = animate ? {
@@ -656,6 +656,8 @@ function sizeReadableLabels(): void {
   sprites.sort((a, b) => priority(a) - priority(b));
   const occupied: { left: number; right: number; top: number; bottom: number }[] = [];
   const screenUp = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+  const parentScale = new THREE.Vector3();
+  const localShift = new THREE.Vector3();
   for (const object of sprites) {
     object.userData.anchor ??= object.position.clone();
     object.position.copy(object.userData.anchor as THREE.Vector3);
@@ -665,8 +667,13 @@ function sizeReadableLabels(): void {
     const aspect = object.userData.aspect as number;
     const pixelHeight = Math.min(object.userData.pixelHeight as number, Math.max(100, width - 24) / aspect);
     const pixelWidth = pixelHeight * aspect;
-    object.scale.set(worldPerPixel * pixelWidth, worldPerPixel * pixelHeight, 1);
-    const screenPosition = worldPosition.project(camera);
+    object.parent!.getWorldScale(parentScale);
+    object.scale.set(
+      worldPerPixel * pixelWidth / parentScale.x,
+      worldPerPixel * pixelHeight / parentScale.y,
+      1 / parentScale.z
+    );
+    const screenPosition = worldPosition.clone().project(camera);
     const x = (screenPosition.x + 1) * width / 2;
     const y = (1 - screenPosition.y) * height / 2;
     object.visible = false;
@@ -684,7 +691,9 @@ function sizeReadableLabels(): void {
         rectangle.top < other.bottom && rectangle.bottom > other.top);
       if (overlaps) continue;
       occupied.push(rectangle);
-      object.position.addScaledVector(screenUp, shift * worldPerPixel);
+      localShift.copy(screenUp).multiplyScalar(shift * worldPerPixel);
+      object.parent!.worldToLocal(localShift.add(worldPosition));
+      object.position.copy(localShift);
       object.visible = true;
       break;
     }

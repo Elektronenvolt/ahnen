@@ -13,6 +13,11 @@ and Three.js (MIT).
   family junctions; arrows point toward children. Hover or select someone to highlight their
   parents, partners, children, and connecting links without rearranging the tree.
   Orbit, pan, zoom, and fit-to-view remain available.
+  Person figures, cards, photos, and card text are doubled in size for readability, with
+  extra spacing only where needed to keep items apart. **Fit to view** still fits the complete
+  3D tree and may therefore zoom out farther; headings and relationship badges retain their size.
+  Given names and surnames on 3D cards use an additional 50% larger font; other card text is unchanged.
+  Cards are centered left-to-right on their platforms and remain in front of their person figures.
   - Levels stay anchored to the root until **Set as root** is used. Separate families are labeled
     independently. Complex pedigrees can span levels; layout warnings preserve every recorded
     relationship rather than rewriting the data. Figures do not imply age.
