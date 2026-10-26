@@ -1,9 +1,17 @@
 import type { JsonGedcomData, JsonIndi } from 'topola';
 
-export const TERRACE_SPACING = 7.4;
+export const PERSON_SCALE = 2;
+export const PERSON_LABEL = { width: 2.9, depth: 0.96, x: 0, z: 1.13 } as const;
+export const PERSON_BOUNDS = {
+  minX: Math.min(-0.6, PERSON_LABEL.x - PERSON_LABEL.width / 2) * PERSON_SCALE,
+  maxX: Math.max(0.6, PERSON_LABEL.x + PERSON_LABEL.width / 2) * PERSON_SCALE,
+  minZ: -0.6 * PERSON_SCALE,
+  maxZ: (PERSON_LABEL.z + PERSON_LABEL.depth / 2) * PERSON_SCALE
+};
+export const PLATFORM_WIDTH = 8.8;
+export const TERRACE_SPACING = PLATFORM_WIDTH + 1.6;
 export const TERRACE_STEP = 1.35;
-export const PERSON_SPACING = 3.4;
-export const PLATFORM_WIDTH = 5.8;
+export const PERSON_SPACING = PERSON_BOUNDS.maxZ - PERSON_BOUNDS.minZ + 1.2;
 const CLUSTER_GAP = 1.5;
 
 export function generationIdentifier(layoutLevel: number): string {
@@ -220,7 +228,7 @@ export function createTreeLayout(input: JsonGedcomData, preferredRoot: string | 
       const cluster: FamilyCluster = {
         id: `${component}:${key}`, people: peopleInCluster, generation, component,
         x: generation * TERRACE_SPACING, y: 0, z: 0,
-        depth: Math.max(4.6, peopleInCluster.length * PERSON_SPACING + 1.2)
+        depth: peopleInCluster.length * PERSON_SPACING
       };
       const origins = peopleInCluster.filter(id => originFamily.has(id)).map(id => ({
         family: originFamily.get(id)!, index: recordedOrder.get(id)!
@@ -248,7 +256,8 @@ export function createTreeLayout(input: JsonGedcomData, preferredRoot: string | 
         cluster.z = z + cluster.depth / 2;
         cluster.people.forEach((id, i) => positions.set(id, {
           x: cluster.x, y: cluster.y,
-          z: cluster.z - 0.55 + (i - (cluster.people.length - 1) / 2) * PERSON_SPACING,
+          z: cluster.z - (PERSON_BOUNDS.minZ + PERSON_BOUNDS.maxZ) / 2 +
+            (i - (cluster.people.length - 1) / 2) * PERSON_SPACING,
           generation: level, component
         }));
         z += cluster.depth + CLUSTER_GAP;
