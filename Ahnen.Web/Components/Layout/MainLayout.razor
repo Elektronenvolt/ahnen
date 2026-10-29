@@ -1,10 +1,17 @@
 @inherits LayoutComponentBase
+@inject Ahnen.Web.Services.DataStore Store
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResources> L
 
 <div class="app-shell">
     <NavMenu />
+    @if (!Store.CanEdit)
+    {
+        <div class="data-unavailable" role="status">@L["Data_Unavailable"]</div>
+    }
     <main class="app-main">
         @Body
     </main>
+    <ApplicationLogs />
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

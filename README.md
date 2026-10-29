@@ -67,8 +67,9 @@ cd Ahnen.Web
 dotnet run
 ```
 
-Open the printed URL (e.g. http://localhost:5205). On first start a 200-person showcase tree is seeded.
-Existing saved trees are never replaced automatically.
+Open the printed URL (e.g. http://localhost:5205). The configured `data/familytree.json` contains
+a supplied 200-person test tree. The application loads the selected file directly; there is no
+first-run seeding or automatic replacement of saved trees.
 
 ### Data storage
 
@@ -76,35 +77,72 @@ All data lives in one folder — **backing up your tree = copying one folder**:
 
 ```
 Ahnen.Web/data/
-├── familytree.json       # all persons & families (GEDCOM 7-mapped, see below)
+├── familytree.json       # supplied test dataset; selected by appsettings.json
 ├── familytree.json.bak   # automatic backup of the previous save
+├── ahnen.json            # optional empty dataset (select explicitly)
 └── photos/               # uploaded photos + thumbnails (webp)
 ```
 
-The location can be changed with the `DataDirectory` setting in `appsettings.json` or the
-`FAMILYTREE_DATA_DIR` environment variable. Writes are atomic (temp file + rename) and every save
-first keeps the previous version as `.bak`.
+The folder is always `data/` under the application's content root (`Ahnen.Web/data/` locally,
+`data/` beside the published application, `/app/data` in Docker). Photos remain in `data/photos/`.
+Writes are atomic (temp file + rename), and every save keeps the previous version as `.bak`.
 
-### Default showcase tree
+Select a file by **filename only** in `appsettings.json`:
 
-`Ahnen.Web/seed/familytree.json` is the single default dataset: a deterministic 200-person tree with
+```json
+"DataFileName": "familytree.json"
+```
+
+Any valid filename is allowed; absolute paths, subdirectories, and traversal are not. There is no
+implicit filename fallback. The optional `data/ahnen.json` contains `{}`; select it with
+`"DataFileName": "ahnen.json"` to start with an empty, editable tree. Changing the setting does not
+copy data between files. Back up these files before editing; the supplied test tree is also mutable
+when selected.
+
+If the selected file is missing, the application still starts with no tree data, logs an **Error**,
+and disables editing, including creation of new people. Missing/blank or invalid filename
+configuration also produces a logged error and the same read-only state. No replacement data file is
+created. Correct `DataFileName` or supply the file in `data/`, then restart the application.
+Malformed JSON and other file read errors remain explicit errors rather than being treated as
+missing data.
+
+**Configuration migration:** `DataFilePath`, `DataDirectory`, and `FAMILYTREE_DATA_DIR` are no longer
+used. Move existing trees and photos into the application's `data/` folder and configure only the
+filename. Do not publish supplied data files over saved trees or replace a used `ahnen.json` with
+the supplied empty file. Keep deployment backups or mount persistent storage at the fixed folder.
+
+### Test dataset
+
+`Ahnen.Web/data/familytree.json` is the supplied deterministic 200-person test tree with
 married and single people, childless couples, one to six children per family, single parents,
 repeated marriages, divorced/separated and unmarried partnerships, adopted children, marriages
 between branches, disconnected families, and isolated people. It showcases the person charts,
-**Show all people** overview, and **3D view**. To try it without touching your saved tree, use a
-separate, empty data directory:
+**Show all people** overview, and **3D view**. The generator is test-data tooling only and is never
+called at application startup. To generate a separate test dataset:
 
 ```bash
-FAMILYTREE_DATA_DIR="$(mktemp -d)" dotnet run --project Ahnen.Web
-# regenerate the default seed:
 cd Ahnen.Web
-node tools/generate-sample-tree.mjs
-# optional custom output, random seed, and person count:
-# node tools/generate-sample-tree.mjs <out> 42 200
+node tools/generate-sample-tree.mjs data/example.json 42 200
+# then select "DataFileName": "example.json" and restart
 ```
+
+The generator's default output is `data/familytree.json`; running it without arguments overwrites
+that file. Only regenerate the supplied dataset if it has no personal changes to preserve.
 
 Photos are re-encoded on upload (strips EXIF/payloads), downscaled to max 1600 px and stored as
 webp together with a 160×160 thumbnail. The JSON only stores the relative path.
+
+### Application logs
+
+The **Logs** section at the bottom of every page starts collapsed and can be expanded with the
+keyboard or mouse. It shows timestamp, level, category, event ID, message, and exception details.
+While expanded, it refreshes approximately once per second. The latest 500 entries are kept in
+process memory, including startup errors, and are cleared on restart.
+
+The viewer is an additional standard .NET logging provider, using the existing `Logging:LogLevel`
+configuration. Existing logging targets are unchanged; provider-specific filters can differ.
+Viewer-specific filtering can be set with `Logging:ApplicationLogs:LogLevel`. Logs are process-wide,
+not per browser, and are visible to every application user. Do not include secrets in log messages.
 
 ## Tests
 
@@ -122,10 +160,13 @@ dotnet publish Ahnen.Web -c Release -r linux-x64 --self-contained -o publish
 
 # or with Docker
 docker build -t ahnen .
-docker run -p 8080:8080 -v ahnen-data:/data ahnen
+docker run -p 8080:8080 -v ahnen-data:/app/data ahnen
 ```
 
-The Docker volume `/data` holds the JSON file and photos.
+The Docker volume `/app/data` holds the JSON files and photos. Remount any existing volume previously
+used at `/data` at `/app/data`; the application no longer uses `/data`. An empty bind mount hides
+the packaged files, so explicitly supply your selected JSON before editing. Until then, the app
+starts read-only and reports the missing file in Logs.
 
 ## Editing personal names
 
@@ -201,9 +242,10 @@ table, so exportability cannot silently break.
 ```
 Ahnen.Web/
 ├── Models/        GEDCOM 7-aligned domain model + GedcomDate parser
-├── Services/      FamilyTreeStore (JSON persistence, CRUD, undo, validation),
+├── Services/      DataStore (JSON persistence, CRUD, undo, validation),
 │                  RelationshipService (derives kinship labels),
-│                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp)
+│                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp),
+│                  ApplicationLogBuffer / ApplicationLogProvider (live log history)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
 ├── ClientSrc/     tree.ts — Topola + d3-zoom, tree3d.ts — Three.js renderer,
 │                  tree3d-layout.ts — pure family graph layout and neighborhood selection,
@@ -212,7 +254,7 @@ Ahnen.Web/
 ├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
 ├── tools/         generate-sample-tree.mjs — deterministic sample data generator
 ├── Resources/     en/de string resources
-└── seed/          sample family used on first start
+└── data/          selected JSON tree, supplied test/empty datasets, photos, and backups
 ```
 
 All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (Three.js, esbuild, SkiaSharp, .NET).

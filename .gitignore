@@ -5,4 +5,8 @@ node_modules/
 .DS_Store
 *.user
 data/
+!Ahnen.Web/data/
+Ahnen.Web/data/*
+!Ahnen.Web/data/ahnen.json
+!Ahnen.Web/data/familytree.json
 Ahnen.Web/wwwroot/js/tree.js

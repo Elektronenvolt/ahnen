@@ -2,22 +2,27 @@ using Ahnen.Web.Models;
 using Ahnen.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Tests;
 
 /// <summary>Builds a store backed by a temp directory for tests.</summary>
 public sealed class TestStore : IDisposable
 {
-    public FamilyTreeStore Store { get; }
+    public DataStore Store { get; }
+    public string ContentRootPath => _dir;
     private readonly string _dir;
 
     public TestStore()
     {
         _dir = Path.Combine(Path.GetTempPath(), "ahnen-tests-" + Guid.NewGuid().ToString("N"));
+        var dataDirectory = Path.Combine(_dir, "data");
+        Directory.CreateDirectory(dataDirectory);
+        File.WriteAllText(Path.Combine(dataDirectory, "familytree.json"), "{}");
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataDirectory"] = _dir })
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataFileName"] = "familytree.json" })
             .Build();
-        Store = new FamilyTreeStore(config, new FakeEnv(_dir));
+        Store = new DataStore(config, new FakeEnv(_dir), NullLogger<DataStore>.Instance);
     }
 
     public void Dispose()
@@ -45,7 +50,7 @@ public static class TestData
     /// grandpa+grandma → father, uncle; father+mother → me, brother, sister;
     /// uncle+auntInLaw → cousin; brother+sisterInLaw → nephew.
     /// </summary>
-    public static Dictionary<string, Person> BuildFamily(FamilyTreeStore store)
+    public static Dictionary<string, Person> BuildFamily(DataStore store)
     {
         var p = new Dictionary<string, Person>
         {

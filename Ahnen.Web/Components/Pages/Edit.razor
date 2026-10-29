@@ -4,7 +4,7 @@
 @using Ahnen.Web.Services
 @using Microsoft.Extensions.Localization
 @implements IDisposable
-@inject FamilyTreeStore Store
+@inject DataStore Store
 @inject PhotoService Photos
 @inject IStringLocalizer<SharedResources> L
 @inject NavigationManager Nav
@@ -16,7 +16,7 @@
         <aside class="person-list-panel">
             <div class="person-list-tools">
                 <input class="input" placeholder="@L["Edit_Search"]" @bind="_search" @bind:event="oninput"/>
-                <button class="btn btn-primary" @onclick="NewPerson">＋ @L["Edit_NewPerson"]</button>
+                <button class="btn btn-primary" disabled="@(!Store.CanEdit)" @onclick="NewPerson">＋ @L["Edit_NewPerson"]</button>
             </div>
             <div class="person-list-count">@string.Format(L["Edit_People"], _persons.Count)</div>
             <ul class="person-list">
@@ -46,7 +46,7 @@
         <section class="editor-panel">
             @if (_person is null)
             {
-                <div class="editor-empty">@L["Edit_SelectPrompt"]</div>
+                <div class="editor-empty">@L[Store.CanEdit ? "Edit_SelectPrompt" : "Tree_DataUnavailable"]</div>
             }
             else
             {
@@ -406,6 +406,7 @@
 
     private void NewPerson()
     {
+        Store.EnsureCanEdit();
         if (!TryFlushNames()) return;
         FlushSave();
         var person = Store.AddPerson("", "", Sex.U);

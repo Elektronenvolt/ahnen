@@ -1,0 +1,91 @@
+@using Ahnen.Web.Services
+@using Microsoft.Extensions.Localization
+@implements IAsyncDisposable
+@inject ApplicationLogBuffer Logs
+@inject IStringLocalizer<SharedResources> L
+
+<section class="application-logs" aria-label="@L["Logs_Title"]">
+    <button class="logs-toggle" aria-expanded="@(_expanded ? "true" : "false")"
+            aria-controls="application-log-entries" @onclick="Toggle">
+        <span aria-hidden="true">@(_expanded ? "−" : "+")</span> @L["Logs_Title"]
+    </button>
+    <div id="application-log-entries" class="logs-entries" hidden="@(!_expanded)" tabindex="0"
+         aria-label="@L["Logs_Title"]">
+        <p class="logs-hint">@L["Logs_Hint"]</p>
+        @if (_entries.Count == 0)
+        {
+            <p>@L["Logs_Empty"]</p>
+        }
+        @foreach (var entry in _entries)
+        {
+            <div class="log-entry log-level-@entry.Level.ToString().ToLowerInvariant()" @key="entry.Sequence">
+                <div class="log-metadata">
+                    <time datetime="@entry.Timestamp.ToString("O")">@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz")</time>
+                    <strong>@entry.Level</strong> <span>@entry.Category</span>
+                    <span>@entry.EventId</span>
+                </div>
+                <pre>@entry.Message</pre>
+                @if (entry.Exception is not null)
+                {
+                    <pre>@entry.Exception</pre>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private readonly CancellationTokenSource _stop = new();
+    private IReadOnlyList<ApplicationLogEntry> _entries = [];
+    private bool _expanded;
+    private Task? _refreshTask;
+    private long _version;
+
+    protected override void OnInitialized() => Refresh();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            _refreshTask = RefreshLoopAsync(_stop.Token);
+    }
+
+    private void Toggle()
+    {
+        _expanded = !_expanded;
+        if (_expanded)
+            Refresh();
+    }
+
+    private void Refresh()
+    {
+        _entries = Logs.Snapshot();
+        _version = _entries.LastOrDefault()?.Sequence ?? 0;
+    }
+
+    private async Task RefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await InvokeAsync(() =>
+                {
+                    if (!_expanded || Logs.Version == _version || cancellationToken.IsCancellationRequested)
+                        return;
+                    Refresh();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _stop.CancelAsync();
+        if (_refreshTask is not null)
+            await _refreshTask;
+        _stop.Dispose();
+    }
+}

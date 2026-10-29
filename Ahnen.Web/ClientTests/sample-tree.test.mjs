@@ -58,7 +58,7 @@ test('uses only GEDCOM-legal values and is deterministic', () => {
   assert.notDeepEqual(generateSampleTree(7, 200), tree);
 });
 
-test('the default seed file matches the generator', () => {
-  const file = fileURLToPath(new URL('../seed/familytree.json', import.meta.url));
+test('the supplied test dataset matches the generator', () => {
+  const file = fileURLToPath(new URL('../data/familytree.json', import.meta.url));
   assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')), tree);
 });

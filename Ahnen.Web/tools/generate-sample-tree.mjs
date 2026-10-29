@@ -136,7 +136,7 @@ export function generateSampleTree(seed = 42, total = 200) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const [out = 'seed/familytree.json', seed = '42', total = '200'] = process.argv.slice(2);
+  const [out = 'data/familytree.json', seed = '42', total = '200'] = process.argv.slice(2);
   const data = generateSampleTree(Number(seed), Number(total));
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, `${JSON.stringify(data, null, 2)}\n`);

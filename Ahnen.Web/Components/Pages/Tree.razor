@@ -4,7 +4,7 @@
 @using Ahnen.Web.Services
 @using Microsoft.Extensions.Localization
 @implements IAsyncDisposable
-@inject FamilyTreeStore Store
+@inject DataStore Store
 @inject ChartDataService ChartData
 @inject RelationshipService Relationships
 @inject IStringLocalizer<SharedResources> L
@@ -111,7 +111,7 @@
     @if (_persons.Count == 0)
     {
         <div class="tree-empty">
-            <p>@L["Tree_Empty"]</p>
+            <p>@L[Store.CanEdit ? "Tree_Empty" : "Tree_DataUnavailable"]</p>
             <a class="btn btn-primary" href="/edit">@L["Nav_Edit"]</a>
         </div>
     }
@@ -193,7 +193,7 @@
                     </div>
 
                     <div class="detail-actions">
-                        <button class="btn" @onclick="SetAsRootAsync">@L["Tree_SetRoot"]</button>
+                        <button class="btn" disabled="@(!Store.CanEdit)" @onclick="SetAsRootAsync">@L["Tree_SetRoot"]</button>
                         <a class="btn btn-primary" href="/edit?person=@_selected.Id">@L["Tree_Edit"]</a>
                     </div>
                 </aside>
@@ -373,6 +373,7 @@
 
     private async Task SetAsRootAsync()
     {
+        Store.EnsureCanEdit();
         if (_selected is null) return;
         _allPeople = false;
         Store.SetRootPerson(_selected.Id);

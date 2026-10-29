@@ -58,6 +58,20 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 
 .app-main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
+.data-unavailable { flex: 0 0 auto; padding: .6rem 1.25rem; background: #fff3cd; color: #664d03; }
+.application-logs { flex: 0 0 auto; border-top: 1px solid var(--border); background: var(--surface); }
+.logs-toggle {
+    width: 100%; padding: .45rem 1.25rem; border: 0; background: transparent;
+    text-align: left; color: var(--text); font: inherit; font-weight: 650; cursor: pointer;
+}
+.logs-entries { max-height: 30vh; overflow: auto; padding: 0 1.25rem .5rem; font-size: .8rem; }
+.logs-hint { color: var(--text-muted); }
+.log-entry { padding: .4rem 0; border-top: 1px solid var(--border); }
+.log-metadata { display: flex; flex-wrap: wrap; gap: .5rem; overflow-wrap: anywhere; }
+.log-entry pre { margin: .25rem 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: inherit; }
+.log-level-error, .log-level-critical { color: var(--danger); }
+.log-level-warning { color: #855300; }
+
 /* ---------- buttons & inputs ---------- */
 .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: .35rem;

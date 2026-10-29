@@ -8,7 +8,7 @@ namespace Ahnen.Web.Services;
 /// (strips EXIF and potential payloads), downscaled to a sane size, and get a
 /// square thumbnail for tree cards. The JSON only ever stores the relative path.
 /// </summary>
-public class PhotoService(FamilyTreeStore store)
+public class PhotoService(DataStore store)
 {
     public const long MaxUploadBytes = 10 * 1024 * 1024;
     private const int MaxEdge = 1600;
@@ -21,6 +21,7 @@ public class PhotoService(FamilyTreeStore store)
     /// <summary>Saves a photo for a person and returns the MediaRef to store (path relative to the data dir).</summary>
     public async Task<MediaRef> SaveAsync(string personId, Stream content, string originalFileName)
     {
+        store.EnsureCanEdit();
         if (!IsAllowed(originalFileName))
             throw new InvalidOperationException($"Unsupported image type: {Path.GetExtension(originalFileName)}");
 
@@ -69,6 +70,7 @@ public class PhotoService(FamilyTreeStore store)
     /// <summary>Deletes a photo file and its thumbnail (ignores missing files).</summary>
     public void Delete(string relativeFile)
     {
+        store.EnsureCanEdit();
         foreach (var file in new[] { relativeFile, ChartDataService.ThumbPath(relativeFile) })
         {
             var full = Path.GetFullPath(Path.Combine(store.DataDirectory, file));

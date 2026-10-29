@@ -64,7 +64,7 @@ const ordinary = data(['grandpa', 'grandma', 'father', 'mother', 'kid', 'sibling
 ]);
 
 test('default showcase retains all 200 people and every family link in 3D', () => {
-  const seed = JSON.parse(readFileSync(new URL('../seed/familytree.json', import.meta.url), 'utf8'));
+  const seed = JSON.parse(readFileSync(new URL('../data/familytree.json', import.meta.url), 'utf8'));
   const input = {
     indis: seed.persons.map(p => ({ id: p.id, sex: p.sex })),
     fams: seed.families.map(f => family(f.id, f.partnerIds, f.childRefs.map(c => c.personId)))

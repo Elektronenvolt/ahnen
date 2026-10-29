@@ -3,10 +3,10 @@ using Ahnen.Web.Services;
 
 namespace Ahnen.Tests;
 
-public class FamilyTreeStoreTests : IDisposable
+public class DataStoreTests : IDisposable
 {
     private readonly TestStore _ts = new();
-    private FamilyTreeStore Store => _ts.Store;
+    private DataStore Store => _ts.Store;
 
     public void Dispose() => _ts.Dispose();
 

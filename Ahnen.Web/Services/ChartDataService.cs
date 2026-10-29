@@ -4,7 +4,7 @@ using Ahnen.Web.Models;
 namespace Ahnen.Web.Services;
 
 /// <summary>Maps the GEDCOM-style data model to the Topola JSON input format (<c>JsonGedcomData</c>).</summary>
-public class ChartDataService(FamilyTreeStore store)
+public class ChartDataService(DataStore store)
 {
     public record TopolaDate(string Text);
 

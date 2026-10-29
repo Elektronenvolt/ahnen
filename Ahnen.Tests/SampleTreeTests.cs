@@ -4,10 +4,11 @@ using Ahnen.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Tests;
 
-/// <summary>The default 200-person seed must stay loadable, legal and chartable.</summary>
+/// <summary>The supplied 200-person test dataset must stay loadable, legal and chartable.</summary>
 public class SampleTreeTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "ahnen-sample-" + Guid.NewGuid().ToString("N"));
@@ -17,15 +18,20 @@ public class SampleTreeTests : IDisposable
         try { Directory.Delete(_dir, recursive: true); } catch { /* best effort */ }
     }
 
-    private FamilyTreeStore LoadSample()
+    private DataStore LoadSample()
     {
+        var dataDirectory = Path.Combine(_dir, "data");
+        Directory.CreateDirectory(dataDirectory);
+        var file = Path.Combine(dataDirectory, "familytree.json");
+        if (!File.Exists(file))
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "data", "familytree.json"), file);
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataDirectory"] = _dir }).Build();
-        return new FamilyTreeStore(config, new SampleEnv(AppContext.BaseDirectory));
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataFileName"] = "familytree.json" }).Build();
+        return new DataStore(config, new SampleEnv(_dir), NullLogger<DataStore>.Instance);
     }
 
     [Fact]
-    public void Default_seed_loads_validates_and_maps_to_chart_data()
+    public void Test_dataset_loads_validates_and_maps_to_chart_data()
     {
         var store = LoadSample();
         Assert.Equal(200, store.Persons.Count);
@@ -46,21 +52,22 @@ public class SampleTreeTests : IDisposable
     }
 
     [Fact]
-    public void Default_seed_is_persisted_on_first_run()
+    public void Existing_test_dataset_is_loaded_without_rewriting()
     {
         var store = LoadSample();
         var saved = JsonSerializer.Deserialize<FamilyTreeData>(
-            File.ReadAllText(Path.Combine(_dir, "familytree.json")),
+            File.ReadAllText(Path.Combine(_dir, "data", "familytree.json")),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 
         Assert.Equal(200, saved.Persons.Count);
         Assert.Equal(store.RootPersonId, saved.RootPersonId);
         Assert.Equal(store.Families.Count, saved.Families.Count);
         Assert.Equal(200, LoadSample().Persons.Count);
+        Assert.False(File.Exists(Path.Combine(_dir, "data", "familytree.json.bak")));
     }
 
     [Fact]
-    public void Existing_data_is_not_replaced_by_default_seed()
+    public void Saved_data_is_preserved_on_reload()
     {
         var store = LoadSample();
         var added = store.AddPerson("Saved", "Person", Sex.U);
