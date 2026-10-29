@@ -1,3 +1,4 @@
+using Ahnen.Core.Services;
 using Ahnen.Web.Components;
 using Ahnen.Web.Services;
 using Microsoft.AspNetCore.Localization;
@@ -12,6 +13,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddSingleton(sp => WebDataStoreOptions.Create(
+    sp.GetRequiredService<IConfiguration>(), sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath));
 builder.Services.AddSingleton<DataStore>();
 builder.Services.AddSingleton<RelationshipService>();
 builder.Services.AddSingleton<ChartDataService>();

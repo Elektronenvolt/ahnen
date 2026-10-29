@@ -1,6 +1,6 @@
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Components.Pages;
+namespace Ahnen.Core.Editing;
 
 /// <summary>Keeps ordered name records separate from an unrecorded type's draft.</summary>
 public sealed class NameEditorState

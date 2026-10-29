@@ -1,5 +1,5 @@
-using Ahnen.Web.Models;
-using Ahnen.Web.Services;
+using Ahnen.Core.Models;
+using Ahnen.Core.Services;
 
 namespace Ahnen.Tests;
 
@@ -9,6 +9,57 @@ public class DataStoreTests : IDisposable
     private DataStore Store => _ts.Store;
 
     public void Dispose() => _ts.Dispose();
+
+    [Fact]
+    public void Failed_save_rolls_back_published_state_and_keeps_disk_unchanged()
+    {
+        var kept = Store.AddPerson("Kept", "Person", Sex.M);
+        var file = Path.Combine(_ts.ContentRootPath, "data", "familytree.json");
+        var onDisk = File.ReadAllText(file);
+        var changed = 0;
+        Store.Changed += () => changed++;
+        Directory.CreateDirectory(file + ".tmp"); // makes the temporary-file write fail
+
+        Assert.ThrowsAny<Exception>(() => Store.AddPerson("Lost", "Person"));
+        Assert.ThrowsAny<Exception>(() => Store.SetRootPerson(kept.Id));
+        Assert.ThrowsAny<Exception>(() => Store.UpdateNames(kept.Id, [new PersonName { Given = "Lost" }]));
+
+        Assert.Equal(["Kept"], Store.Persons.Select(p => p.PrimaryName.Given));
+        Assert.Equal(onDisk, File.ReadAllText(file));
+        Assert.Equal(0, changed);
+
+        Directory.Delete(file + ".tmp");
+        Store.AddPerson("Later", "Person");
+        Assert.Equal(["Kept", "Later"], Store.Persons.Select(p => p.PrimaryName.Given));
+    }
+
+    [Fact]
+    public void Failed_save_does_not_consume_the_undo_step()
+    {
+        Store.AddPerson("First", "Person");
+        var second = Store.AddPerson("Second", "Person");
+        var file = Path.Combine(_ts.ContentRootPath, "data", "familytree.json");
+        Directory.CreateDirectory(file + ".tmp");
+
+        Assert.ThrowsAny<Exception>(() => Store.AddPerson("Lost", "Person"));
+        Assert.ThrowsAny<Exception>(() => Store.Undo());
+        Directory.Delete(file + ".tmp");
+
+        Assert.True(Store.Undo());
+        Assert.Null(Store.GetPerson(second.Id));
+        Assert.Single(Store.Persons);
+    }
+
+    [Fact]
+    public void Failing_mutation_does_not_change_state()
+    {
+        var person = Store.AddPerson("Valid", "Person", Sex.M);
+
+        Assert.ThrowsAny<Exception>(() => Store.UpdateFamily(new Family { Id = "F404" }));
+        Assert.Single(Store.Persons);
+        Assert.Equal(person.Id, Store.RootPersonId);
+        Assert.Empty(Store.Families);
+    }
 
     [Fact]
     public void AddPerson_assigns_sequential_xref_ids()

@@ -1,5 +1,5 @@
-using Ahnen.Web.Components.Pages;
-using Ahnen.Web.Models;
+using Ahnen.Core.Editing;
+using Ahnen.Core.Models;
 using System.Globalization;
 using System.Resources;
 
@@ -12,8 +12,8 @@ public class NameEditorStateTests
     [InlineData("de")]
     public void EverySupportedTypeHasLocalizedLabelsAndEditorMessages(string culture)
     {
-        var resources = new ResourceManager("Ahnen.Web.Resources.SharedResources",
-            typeof(Ahnen.Web.SharedResources).Assembly);
+        var resources = new ResourceManager("Ahnen.Core.Resources.SharedResources",
+            typeof(Ahnen.Core.SharedResources).Assembly);
         var language = CultureInfo.GetCultureInfo(culture);
         foreach (var type in Enum.GetValues<NameType>())
         {

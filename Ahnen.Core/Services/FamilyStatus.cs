@@ -1,7 +1,7 @@
-using Ahnen.Web.Helpers;
-using Ahnen.Web.Models;
+using Ahnen.Core.Helpers;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
 
 /// <summary>
 /// Maps between the friendly "family status" dropdown and GEDCOM family events.

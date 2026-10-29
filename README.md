@@ -242,13 +242,18 @@ table, so exportability cannot silently break.
 ## Architecture
 
 ```
-Ahnen.Web/
+Ahnen.Core/        shared net10.0 library (no ASP.NET dependency), used by the web host
 ├── Models/        GEDCOM 7-aligned domain model + GedcomDate parser
-├── Services/      DataStore (JSON persistence, CRUD, undo, validation),
-│                  RelationshipService (derives kinship labels),
-│                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp),
+├── Services/      DataStore (JSON persistence, CRUD, undo, validation; storage location is
+│                  supplied by the host via DataStoreOptions; a failed save rolls back state),
+│                  RelationshipService (derives kinship labels), PhotoService (SkiaSharp),
 │                  ApplicationLogBuffer / ApplicationLogProvider (live log history)
 ├── Helpers/       small shared extensions (ancestry walk, marriage event, text join, photo paths)
+├── Editing/       NameEditorState (UI-independent name draft state)
+└── Resources/     en/de string resources
+
+Ahnen.Web/
+├── Services/      ChartDataService (Topola JSON mapping), WebDataStoreOptions (data/ under content root)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
 ├── ClientSrc/     tree.ts — Topola + d3-zoom, tree3d.ts — Three.js renderer,
 │                  tree3d-layout.ts — pure family graph layout and neighborhood selection,
@@ -257,7 +262,6 @@ Ahnen.Web/
 │                  tree-depth.ts — generation limit, shared.ts — shared types (esbuild)
 ├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
 ├── tools/         generate-sample-tree.mjs — deterministic sample data generator
-├── Resources/     en/de string resources
 └── data/          selected JSON tree, supplied test/empty datasets, photos, and backups
 ```
 

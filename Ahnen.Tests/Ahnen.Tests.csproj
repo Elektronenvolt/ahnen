@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ahnen.Core\Ahnen.Core.csproj" />
     <ProjectReference Include="..\Ahnen.Web\Ahnen.Web.csproj" />
   </ItemGroup>
 

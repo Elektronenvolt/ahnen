@@ -1,8 +1,8 @@
-using Ahnen.Web.Helpers;
-using Ahnen.Web.Models;
+using Ahnen.Core.Helpers;
+using Ahnen.Core.Models;
 using SkiaSharp;
 
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
 
 /// <summary>
 /// Stores person photos as files under data/photos. Uploads are re-encoded

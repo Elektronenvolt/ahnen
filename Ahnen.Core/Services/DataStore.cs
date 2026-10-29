@@ -1,11 +1,16 @@
 using System.Text.Json;
-using Ahnen.Web.Helpers;
-using Ahnen.Web.Models;
+using Ahnen.Core.Helpers;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
+
+/// <summary>Host-supplied storage location. The web host and the desktop host each provide their own.</summary>
+/// <param name="DataDirectory">Writable folder holding the JSON document and the <c>photos</c> subfolder.</param>
+/// <param name="DataFileName">File name only (no path) of the JSON document inside <paramref name="DataDirectory"/>.</param>
+public sealed record DataStoreOptions(string DataDirectory, string? DataFileName);
 
 /// <summary>
-/// Owns the family tree data: loads/saves the JSON file (atomic write + rolling
+/// Owns the family tree data
 /// backup), provides CRUD and structural relationship operations, validation,
 /// and a one-step undo snapshot. Thread-safe via a single lock (single-user app).
 /// </summary>
@@ -29,12 +34,12 @@ public class DataStore
     /// <summary>Raised after any mutation is persisted; pages subscribe to refresh.</summary>
     public event Action? Changed;
 
-    public DataStore(IConfiguration config, IWebHostEnvironment env, ILogger<DataStore> logger)
+    public DataStore(DataStoreOptions options, ILogger<DataStore> logger)
     {
-        DataDirectory = Path.Combine(env.ContentRootPath, "data");
+        DataDirectory = options.DataDirectory;
         PhotosDirectory = Path.Combine(DataDirectory, "photos");
         Directory.CreateDirectory(PhotosDirectory);
-        var fileName = config["DataFileName"];
+        var fileName = options.DataFileName;
         if (string.IsNullOrWhiteSpace(fileName) || fileName is "." or ".." ||
             fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
             fileName.IndexOfAny(['/', '\\', '<', '>', ':', '"', '|', '?', '*']) >= 0)
@@ -68,13 +73,21 @@ public class DataStore
         GedcomValidator.ValidateLegal(_data); // GEDCOM compliance gate: never persist illegal values
         var json = JsonSerializer.Serialize(_data, JsonOptions);
         var tmp = _dataFile + ".tmp";
-        File.WriteAllText(tmp, json);
-        if (File.Exists(_dataFile))
-            File.Copy(_dataFile, _dataFile + ".bak", overwrite: true);
-        File.Move(tmp, _dataFile!, overwrite: true);
+        try
+        {
+            File.WriteAllText(tmp, json);
+            if (File.Exists(_dataFile))
+                File.Copy(_dataFile, _dataFile + ".bak", overwrite: true);
+            File.Move(tmp, _dataFile!, overwrite: true);
+        }
+        catch
+        {
+            try { File.Delete(tmp); } catch { /* best effort */ }
+            throw;
+        }
     }
 
-    private void Snapshot() => _undoSnapshot = JsonSerializer.Serialize(_data, JsonOptions);
+    private string Snapshot() => JsonSerializer.Serialize(_data, JsonOptions);
 
     /// <summary>Restores the state before the most recent mutation. Returns false when nothing to undo.</summary>
     public bool Undo()
@@ -83,9 +96,20 @@ public class DataStore
         {
             EnsureCanEdit();
             if (_undoSnapshot is null) return false;
-            _data = JsonSerializer.Deserialize<FamilyTreeData>(_undoSnapshot, JsonOptions)!;
+            var before = _data;
+            var snapshot = _undoSnapshot;
+            _data = JsonSerializer.Deserialize<FamilyTreeData>(snapshot, JsonOptions)!;
             _undoSnapshot = null;
-            Save();
+            try
+            {
+                Save();
+            }
+            catch
+            {
+                _data = before;
+                _undoSnapshot = snapshot;
+                throw;
+            }
         }
         Changed?.Invoke();
         return true;
@@ -97,9 +121,21 @@ public class DataStore
         lock (_gate)
         {
             EnsureCanEdit();
-            Snapshot();
-            result = action(_data);
-            Save();
+            // A failed action or save must not leave memory ahead of what is on disk.
+            var before = Snapshot();
+            var previousUndo = _undoSnapshot;
+            try
+            {
+                result = action(_data);
+                _undoSnapshot = before;
+                Save();
+            }
+            catch
+            {
+                _data = JsonSerializer.Deserialize<FamilyTreeData>(before, JsonOptions)!;
+                _undoSnapshot = previousUndo;
+                throw;
+            }
         }
         Changed?.Invoke();
         return result;

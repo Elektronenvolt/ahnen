@@ -1,9 +1,6 @@
 using System.Text.Json;
-using Ahnen.Web.Models;
-using Ahnen.Web.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
+using Ahnen.Core.Models;
+using Ahnen.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Tests;
@@ -37,9 +34,9 @@ public class NamePersistenceTests
         Assert.Equal(" Éri ", fromDisk.Persons[0].Names[0].Nickname);
         Assert.Equal("Other", fromDisk.Persons[0].Names[^1].Given);
 
-        var reloaded = new DataStore(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataFileName"] = "familytree.json" })
-            .Build(), new TestEnvironment(fixture.ContentRootPath), NullLogger<DataStore>.Instance);
+        var reloaded = new DataStore(
+            new DataStoreOptions(Path.Combine(fixture.ContentRootPath, "data"), "familytree.json"),
+            NullLogger<DataStore>.Instance);
         Assert.Equal(saved.Names.Select(n => n.Full), reloaded.GetPerson(person.Id)!.Names.Select(n => n.Full));
     }
 
@@ -103,15 +100,5 @@ public class NamePersistenceTests
         Assert.False(store.UpdateNames(person.Id, store.GetPerson(person.Id)!.Names));
         Assert.True(store.Undo());
         Assert.Equal("Original", store.GetPerson(person.Id)!.PrimaryName.Given);
-    }
-
-    private sealed class TestEnvironment(string root) : IWebHostEnvironment
-    {
-        public string ApplicationName { get; set; } = "Ahnen.Tests";
-        public string EnvironmentName { get; set; } = "Test";
-        public string ContentRootPath { get; set; } = root;
-        public string WebRootPath { get; set; } = root;
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Ahnen.Web.Helpers;
+using Ahnen.Core.Helpers;
 
-namespace Ahnen.Web.Models;
+namespace Ahnen.Core.Models;
 
 /// <summary>A personal name; maps to GEDCOM NAME with TYPE and name pieces.</summary>
 public class PersonName

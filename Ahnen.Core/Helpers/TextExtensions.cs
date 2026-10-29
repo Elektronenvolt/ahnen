@@ -1,4 +1,4 @@
-namespace Ahnen.Web.Helpers;
+namespace Ahnen.Core.Helpers;
 
 public static class TextExtensions
 {

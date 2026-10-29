@@ -1,8 +1,7 @@
 using System.Text.Json;
+using Ahnen.Core.Services;
 using Ahnen.Web.Services;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 
 namespace Ahnen.Tests;
@@ -20,8 +19,7 @@ public sealed class DataFileConfigurationTests : IDisposable
         settings["DataFileName"] = fileName;
         var config = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         using var factory = LoggerFactory.Create(builder => builder.AddProvider(new ApplicationLogProvider(_logs)));
-        return new DataStore(config, new TestEnvironment(_root),
-            factory.CreateLogger<DataStore>());
+        return new DataStore(WebDataStoreOptions.Create(config, _root), factory.CreateLogger<DataStore>());
     }
 
     private void PrepareFile(string fileName, string contents = "{}")
@@ -143,15 +141,5 @@ public sealed class DataFileConfigurationTests : IDisposable
     {
         if (Directory.Exists(_root))
             Directory.Delete(_root, recursive: true);
-    }
-
-    private sealed class TestEnvironment(string root) : IWebHostEnvironment
-    {
-        public string WebRootPath { get; set; } = root;
-        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
-        public string ApplicationName { get; set; } = "Ahnen.Tests";
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-        public string ContentRootPath { get; set; } = root;
-        public string EnvironmentName { get; set; } = "Test";
     }
 }

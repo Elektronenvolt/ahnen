@@ -1,14 +1,14 @@
 using System.Globalization;
 using System.Resources;
-using Ahnen.Web;
-using Ahnen.Web.Services;
+using Ahnen.Core;
+using Ahnen.Core.Services;
 
 namespace Ahnen.Tests;
 
 public class ResourceKeyTests
 {
     private static readonly ResourceManager Resources =
-        new("Ahnen.Web.Resources.SharedResources", typeof(SharedResources).Assembly);
+        new("Ahnen.Core.Resources.SharedResources", typeof(SharedResources).Assembly);
 
     [Theory]
     [InlineData("en")]

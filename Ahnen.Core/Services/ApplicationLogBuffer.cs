@@ -1,4 +1,4 @@
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
 
 public sealed record ApplicationLogEntry(
     long Sequence, DateTimeOffset Timestamp, LogLevel Level, string Category,

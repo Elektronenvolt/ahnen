@@ -1,5 +1,5 @@
-using Ahnen.Web.Helpers;
-using Ahnen.Web.Services;
+using Ahnen.Core.Helpers;
+using Ahnen.Core.Services;
 using SkiaSharp;
 
 namespace Ahnen.Tests;

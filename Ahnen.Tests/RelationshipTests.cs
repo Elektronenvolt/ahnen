@@ -1,6 +1,6 @@
 using System.Globalization;
-using Ahnen.Web.Models;
-using Ahnen.Web.Services;
+using Ahnen.Core.Models;
+using Ahnen.Core.Services;
 
 namespace Ahnen.Tests;
 

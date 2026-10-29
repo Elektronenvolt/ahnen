@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 
 namespace Ahnen.Tests;
 

@@ -1,7 +1,5 @@
-using Ahnen.Web.Models;
-using Ahnen.Web.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
+using Ahnen.Core.Models;
+using Ahnen.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Tests;
@@ -19,27 +17,12 @@ public sealed class TestStore : IDisposable
         var dataDirectory = Path.Combine(_dir, "data");
         Directory.CreateDirectory(dataDirectory);
         File.WriteAllText(Path.Combine(dataDirectory, "familytree.json"), "{}");
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataFileName"] = "familytree.json" })
-            .Build();
-        Store = new DataStore(config, new FakeEnv(_dir), NullLogger<DataStore>.Instance);
+        Store = new DataStore(new DataStoreOptions(dataDirectory, "familytree.json"), NullLogger<DataStore>.Instance);
     }
 
     public void Dispose()
     {
         try { Directory.Delete(_dir, recursive: true); } catch { /* best effort */ }
-    }
-
-    private sealed class FakeEnv(string root) : IWebHostEnvironment
-    {
-        public string WebRootPath { get; set; } = root;
-        public Microsoft.Extensions.FileProviders.IFileProvider WebRootFileProvider { get; set; } =
-            new Microsoft.Extensions.FileProviders.NullFileProvider();
-        public string ApplicationName { get; set; } = "Ahnen.Tests";
-        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
-            new Microsoft.Extensions.FileProviders.NullFileProvider();
-        public string ContentRootPath { get; set; } = root;
-        public string EnvironmentName { get; set; } = "Test";
     }
 }
 

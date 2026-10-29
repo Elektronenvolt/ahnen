@@ -1,6 +1,6 @@
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
 
 public enum RelationshipKind
 {

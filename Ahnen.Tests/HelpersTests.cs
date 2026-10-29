@@ -1,5 +1,5 @@
-using Ahnen.Web.Helpers;
-using Ahnen.Web.Models;
+using Ahnen.Core.Helpers;
+using Ahnen.Core.Models;
 
 namespace Ahnen.Tests;
 
@@ -78,10 +78,10 @@ public class HelpersTests
     public void Validator_rejects_ancestry_cycles_and_accepts_valid_trees()
     {
         var data = Tree();
-        Ahnen.Web.Services.GedcomValidator.ValidateLegal(data);
+        Ahnen.Core.Services.GedcomValidator.ValidateLegal(data);
 
         data.Families[0].PartnerIds.Add("c");
-        var error = Assert.Throws<InvalidOperationException>(() => Ahnen.Web.Services.GedcomValidator.ValidateLegal(data));
+        var error = Assert.Throws<InvalidOperationException>(() => Ahnen.Core.Services.GedcomValidator.ValidateLegal(data));
         Assert.Contains("own ancestor", error.Message);
     }
 

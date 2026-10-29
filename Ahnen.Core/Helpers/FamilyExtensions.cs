@@ -1,6 +1,6 @@
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Helpers;
+namespace Ahnen.Core.Helpers;
 
 public static class FamilyExtensions
 {

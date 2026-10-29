@@ -1,4 +1,4 @@
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
 
 [ProviderAlias("ApplicationLogs")]
 public sealed class ApplicationLogProvider(ApplicationLogBuffer buffer) : ILoggerProvider

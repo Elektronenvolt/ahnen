@@ -1,7 +1,7 @@
 using System.Globalization;
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Services;
+namespace Ahnen.Core.Services;
 
 /// <summary>
 /// Turns a <see cref="RelationshipResult"/> into a localized human label

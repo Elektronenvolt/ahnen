@@ -1,5 +1,5 @@
 using Ahnen.Web.Components.Layout;
-using Ahnen.Web.Services;
+using Ahnen.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Configuration;

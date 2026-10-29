@@ -1,4 +1,4 @@
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 using System.Globalization;
 
 namespace Ahnen.Tests;

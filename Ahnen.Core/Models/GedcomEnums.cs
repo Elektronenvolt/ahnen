@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Ahnen.Web.Models;
+namespace Ahnen.Core.Models;
 
 /// <summary>GEDCOM 7 SEX values.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]

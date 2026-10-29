@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Ahnen.Web.Models;
+namespace Ahnen.Core.Models;
 
 /// <summary>
 /// Parses and formats GEDCOM 7 date values (subset: exact/partial dates with

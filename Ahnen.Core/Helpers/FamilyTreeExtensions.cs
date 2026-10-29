@@ -1,6 +1,6 @@
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
 
-namespace Ahnen.Web.Helpers;
+namespace Ahnen.Core.Helpers;
 
 /// <summary>Structural queries and rules on the raw family tree data, shared by the store and the validator.</summary>
 public static class FamilyTreeExtensions
