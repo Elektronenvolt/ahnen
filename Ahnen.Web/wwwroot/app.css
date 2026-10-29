@@ -70,7 +70,7 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 .log-metadata { display: flex; flex-wrap: wrap; gap: .5rem; overflow-wrap: anywhere; }
 .log-entry pre { margin: .25rem 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: inherit; }
 .log-level-error, .log-level-critical { color: var(--danger); }
-.log-level-warning { color: #855300; }
+.log-level-warning { color: #c2410c; }
 
 /* ---------- buttons & inputs ---------- */
 .btn {

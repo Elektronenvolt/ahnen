@@ -18,10 +18,10 @@
         }
         @foreach (var entry in _entries)
         {
-            <div class="log-entry log-level-@entry.Level.ToString().ToLowerInvariant()" @key="entry.Sequence">
+            <div class="log-entry" @key="entry.Sequence">
                 <div class="log-metadata">
                     <time datetime="@entry.Timestamp.ToString("O")">@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz")</time>
-                    <strong>@entry.Level</strong> <span>@entry.Category</span>
+                    <strong class="log-level-@entry.Level.ToString().ToLowerInvariant()">@entry.Level</strong> <span>@entry.Category</span>
                     <span>@entry.EventId</span>
                 </div>
                 <pre>@entry.Message</pre>
