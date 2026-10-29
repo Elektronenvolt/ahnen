@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Ahnen.Testing" />
+    <Compile Include="..\Ahnen.Core.Tests\TestStore.cs" Link="TestStore.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ahnen.Core\Ahnen.Core.csproj" />
     <ProjectReference Include="..\Ahnen.Web\Ahnen.Web.csproj" />
   </ItemGroup>
 

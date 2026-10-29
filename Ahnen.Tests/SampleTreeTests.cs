@@ -1,9 +1,7 @@
 using System.Text.Json;
-using Ahnen.Web.Models;
+using Ahnen.Core.Models;
+using Ahnen.Core.Services;
 using Ahnen.Web.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Tests;
@@ -25,9 +23,8 @@ public class SampleTreeTests : IDisposable
         var file = Path.Combine(dataDirectory, "familytree.json");
         if (!File.Exists(file))
             File.Copy(Path.Combine(AppContext.BaseDirectory, "data", "familytree.json"), file);
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataFileName"] = "familytree.json" }).Build();
-        return new DataStore(config, new SampleEnv(_dir), NullLogger<DataStore>.Instance);
+        return new DataStore(new DataStoreOptions(Path.Combine(_dir, "data"), "familytree.json"),
+            NullLogger<DataStore>.Instance);
     }
 
     [Fact]
@@ -78,15 +75,5 @@ public class SampleTreeTests : IDisposable
         Assert.Equal(201, reloaded.Persons.Count);
         Assert.Equal(added.Id, reloaded.RootPersonId);
         Assert.Equal("Saved", reloaded.GetPerson(added.Id)!.PrimaryName.Given);
-    }
-
-    private sealed class SampleEnv(string root) : IWebHostEnvironment
-    {
-        public string WebRootPath { get; set; } = root;
-        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
-        public string ApplicationName { get; set; } = "Ahnen.Tests";
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-        public string ContentRootPath { get; set; } = root;
-        public string EnvironmentName { get; set; } = "Test";
     }
 }

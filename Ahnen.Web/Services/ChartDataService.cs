@@ -1,6 +1,7 @@
 using System.Globalization;
-using Ahnen.Web.Helpers;
-using Ahnen.Web.Models;
+using Ahnen.Core.Helpers;
+using Ahnen.Core.Models;
+using Ahnen.Core.Services;
 
 namespace Ahnen.Web.Services;
 

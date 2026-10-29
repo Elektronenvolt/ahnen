@@ -71,9 +71,9 @@ Open the printed URL (e.g. http://localhost:5205). The configured `data/familytr
 a supplied 200-person test tree. The application loads the selected file directly; there is no
 first-run seeding or automatic replacement of saved trees.
 
-### Data storage
+### Web data storage
 
-All data lives in one folder — **backing up your tree = copying one folder**:
+All data lives in one folder
 
 ```
 Ahnen.Web/data/
@@ -149,10 +149,18 @@ not per browser, and are visible to every application user. Do not include secre
 ## Tests
 
 ```bash
-dotnet test
+# shared-library tests only (no web or Node.js build required)
+dotnet test Ahnen.Core.Tests/Ahnen.Core.Tests.csproj
+# all .NET tests
+dotnet test Ahnen.sln
 # deterministic client layout and relationship tests
 npm --prefix Ahnen.Web test
 ```
+
+`Ahnen.Core.Tests` covers the shared domain model, dates, validation, persistence, editing state,
+relationships, photos, logging, helpers, and resources independently of the web host.
+`Ahnen.Tests` covers web configuration, chart mapping, sample datasets, and Blazor log rendering.
+All projects target `net10.0`; building and testing the solution does not require Windows.
 
 ## Deployment
 
@@ -242,13 +250,18 @@ table, so exportability cannot silently break.
 ## Architecture
 
 ```
-Ahnen.Web/
+Ahnen.Core/        shared net10.0 library (no ASP.NET dependency), used by Web and available to future hosts
 ├── Models/        GEDCOM 7-aligned domain model + GedcomDate parser
-├── Services/      DataStore (JSON persistence, CRUD, undo, validation),
-│                  RelationshipService (derives kinship labels),
-│                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp),
+├── Services/      DataStore (JSON persistence, CRUD, undo, validation; storage location is
+│                  supplied by the host via DataStoreOptions; a failed save rolls back state),
+│                  RelationshipService (derives kinship labels), PhotoService (SkiaSharp),
 │                  ApplicationLogBuffer / ApplicationLogProvider (live log history)
 ├── Helpers/       small shared extensions (ancestry walk, marriage event, text join, photo paths)
+├── Editing/       NameEditorState (UI-independent name draft state)
+└── Resources/     en/de string resources
+
+Ahnen.Web/
+├── Services/      ChartDataService (Topola JSON mapping), WebDataStoreOptions (data/ under content root)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
 ├── ClientSrc/     tree.ts — Topola + d3-zoom, tree3d.ts — Three.js renderer,
 │                  tree3d-layout.ts — pure family graph layout and neighborhood selection,
@@ -257,8 +270,10 @@ Ahnen.Web/
 │                  tree-depth.ts — generation limit, shared.ts — shared types (esbuild)
 ├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
 ├── tools/         generate-sample-tree.mjs — deterministic sample data generator
-├── Resources/     en/de string resources
 └── data/          selected JSON tree, supplied test/empty datasets, photos, and backups
+
+Ahnen.Core.Tests/  independent shared-library tests; temporary-store fixture source also linked by Ahnen.Tests
+Ahnen.Tests/       web-host and integration tests
 ```
 
 All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (Three.js, esbuild, SkiaSharp, .NET).
