@@ -71,48 +71,6 @@ Open the printed URL (e.g. http://localhost:5205). The configured `data/familytr
 a supplied 200-person test tree. The application loads the selected file directly; there is no
 first-run seeding or automatic replacement of saved trees.
 
-### Desktop application (Windows)
-
-Run `dotnet run --project Ahnen.Desktop`. The desktop build and publish outputs include
-`familytree.json` and `appsettings.json` directly beside the executable (not in `data/`).
-The desktop application always resolves both files from its executable folder, regardless of
-its working directory. Select the tree by filename only in that `appsettings.json`:
-
-```json
-{
-  "DataFileName": "familytree.json"
-}
-```
-
-Paths and subdirectories are not allowed. Missing or invalid configuration or data is logged
-and disables editing; no replacement tree is created. Saves and `.bak` backups stay beside the
-selected file; photos use the `photos/` subfolder. The application folder must be writable.
-Back up your tree before rebuilding or publishing into a used application folder: deployment
-can replace the supplied files. Existing desktop trees must be moved from
-`%LOCALAPPDATA%\Ahnen\data` into the executable folder explicitly; they are not migrated automatically.
-Language preferences remain in `%LOCALAPPDATA%\Ahnen\settings.json`; `AHNEN_DESKTOP_ROOT`
-overrides only that preferences location, not the tree or application configuration.
-
-The native **Family tree** page displays people and relationships in 2D. Choose hourglass,
-relatives, ancestors or descendants and a generation limit, or **Show all people** for a
-complete overview including separate families and isolated people. Display settings (colors,
-orientation, IDs and sex symbols) are saved with your language preferences.
-
-Click a card or person-list entry to focus it; Shift-click shows details without changing the
-chart. Search by name or ID, then press Enter; the virtualized person list is also a keyboard
-alternative to the canvas. Drag to pan, use the wheel or +/- buttons to zoom, **Fit to view**
-to fit the whole diagram, and the minimap to navigate. Collapse/expand the selected branch
-in a person chart; overview ignores collapsed branches. **Set as root** is the only selection
-action that saves a different root to the document. Generation labels stay relative to that
-root; complex pedigrees can span levels and show a warning without changing recorded links.
-
-Married partner links are solid, ended partnerships dashed, unmarried links dotted and
-non-birth child links purple/dashed. Photos are decoded natively (including WebP) with a
-bounded thumbnail cache. Layout uses cancellable background work and drawing is batched
-with viewport filtering and reduced detail at overview scales. Synthetic layout tests cover
-200, 1,000 and 10,000 people; this is not a guarantee of interactive frame rates on every GPU.
-The editor and the planned new 3D view are **not implemented yet**.
-
 ### Web data storage
 
 All data lives in one folder
@@ -191,13 +149,18 @@ not per browser, and are visible to every application user. Do not include secre
 ## Tests
 
 ```bash
-dotnet test
+# shared-library tests only (no web or Node.js build required)
+dotnet test Ahnen.Core.Tests/Ahnen.Core.Tests.csproj
+# all .NET tests
+dotnet test Ahnen.sln
 # deterministic client layout and relationship tests
 npm --prefix Ahnen.Web test
 ```
 
-`Ahnen.Desktop` and `Ahnen.Desktop.Tests` target `net10.0-windows`, so building the full solution
-requires Windows. On other systems build and test `Ahnen.Web` and `Ahnen.Tests` only.
+`Ahnen.Core.Tests` covers the shared domain model, dates, validation, persistence, editing state,
+relationships, photos, logging, helpers, and resources independently of the web host.
+`Ahnen.Tests` covers web configuration, chart mapping, sample datasets, and Blazor log rendering.
+All projects target `net10.0`; building and testing the solution does not require Windows.
 
 ## Deployment
 
@@ -287,7 +250,7 @@ table, so exportability cannot silently break.
 ## Architecture
 
 ```
-Ahnen.Core/        shared net10.0 library (no ASP.NET dependency), used by the web and desktop hosts
+Ahnen.Core/        shared net10.0 library (no ASP.NET dependency), used by Web and available to future hosts
 ├── Models/        GEDCOM 7-aligned domain model + GedcomDate parser
 ├── Services/      DataStore (JSON persistence, CRUD, undo, validation; storage location is
 │                  supplied by the host via DataStoreOptions; a failed save rolls back state),
@@ -309,33 +272,8 @@ Ahnen.Web/
 ├── tools/         generate-sample-tree.mjs — deterministic sample data generator
 └── data/          selected JSON tree, supplied test/empty datasets, photos, and backups
 
-Ahnen.Desktop/     native Windows app (WPF, net10.0-windows, MVVM via CommunityToolkit.Mvvm);
-│                  no web view, browser runtime or local server
-├── Views/         XAML windows and controls
-├── ViewModels/    window, page and log view models
-├── Localization/  Localizer + {loc:Loc Key} markup extension (desktop strings, then Core strings)
-├── Services/      per-user paths, preferences, document session
-├── Resources/     desktop-only en/de strings
-└── Themes/        shared styles and palette
-
-Ahnen.Desktop.Tests/  desktop view-model, localization, preferences and document-session tests
+Ahnen.Core.Tests/  independent shared-library tests; temporary-store fixture source also linked by Ahnen.Tests
+Ahnen.Tests/       web-host and integration tests
 ```
-
-## Windows desktop app (in progress)
-
-A native WPF application is being added next to the web app. It reuses `Ahnen.Core` and keeps its
-data separate from the web app. The current state is a shell only: navigation, English/German
-language switching, a live log viewer and a status line. The tree views, editor, document import
-and installer are not implemented yet.
-
-```bash
-# Windows only
-dotnet run --project Ahnen.Desktop
-```
-
-- Data lives in `%LOCALAPPDATA%\Ahnen\data` (the JSON document `familytree.json` plus `photos/`);
-  preferences are in `%LOCALAPPDATA%\Ahnen\settings.json`. Set `AHNEN_DESKTOP_ROOT` to use another folder.
-- A missing document is not created or seeded; the app starts read-only. The web app's data is never
-  opened or modified.
 
 All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (Three.js, esbuild, SkiaSharp, .NET).

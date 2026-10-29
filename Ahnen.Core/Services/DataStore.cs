@@ -4,7 +4,7 @@ using Ahnen.Core.Models;
 
 namespace Ahnen.Core.Services;
 
-/// <summary>Host-supplied storage location. The web host and the desktop host each provide their own.</summary>
+/// <summary>Host-supplied storage location, independent of the application's UI or hosting model.</summary>
 /// <param name="DataDirectory">Writable folder holding the JSON document and the <c>photos</c> subfolder.</param>
 /// <param name="DataFileName">File name only (no path) of the JSON document inside <paramref name="DataDirectory"/>.</param>
 public sealed record DataStoreOptions(string DataDirectory, string? DataFileName);
