@@ -1,3 +1,4 @@
+using Ahnen.Web.Helpers;
 using Ahnen.Web.Models;
 
 namespace Ahnen.Web.Services;
@@ -55,21 +56,7 @@ public static class GedcomValidator
 
         // No ancestry cycles.
         foreach (var p in data.Persons)
-        {
-            var seen = new HashSet<string>();
-            var queue = new Queue<string>([p.Id]);
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                foreach (var parent in data.Families
-                             .Where(f => f.ChildRefs.Any(c => c.PersonId == current))
-                             .SelectMany(f => f.PartnerIds))
-                {
-                    Require(parent != p.Id, $"{p.Id} would be their own ancestor");
-                    if (seen.Add(parent)) queue.Enqueue(parent);
-                }
-            }
-        }
+            Require(!data.AncestorsOf(p.Id).Contains(p.Id), $"{p.Id} would be their own ancestor");
     }
 
     private static void Require(bool condition, string message)

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Ahnen.Web.Helpers;
 using Ahnen.Web.Models;
 
 namespace Ahnen.Web.Services;
@@ -64,15 +65,15 @@ public class ChartDataService(DataStore store)
                                      && n.Surname.Length > 0 && n.Surname != name.Surname)?.Surname;
             return new TopolaIndi(
                 p.Id,
-                NullIfEmpty(Join(name.Prefix, name.Given)),
-                NullIfEmpty(Join(name.Surname, name.Suffix)),
+                NullIfEmpty(new[] { name.Prefix, name.Given }.JoinNonBlank()),
+                NullIfEmpty(new[] { name.Surname, name.Suffix }.JoinNonBlank()),
                 maiden,
                 p.Sex switch { Sex.M => "M", Sex.F => "F", _ => null },
                 famcOf.TryGetValue(p.Id, out var famc) ? famc.FamilyId : null,
                 families.Where(f => f.PartnerIds.Contains(p.Id)).Select(f => f.Id).ToList(),
                 ToEvent(p.Birth, culture, confirmed: false),
                 ToEvent(p.Death, culture, confirmed: true),
-                p.PhotoFile is { } photo ? [new TopolaImage($"/media/{ThumbPath(photo)}")] : null,
+                p.PhotoFile is { } photo ? [new TopolaImage($"/media/{PhotoPaths.ThumbPath(photo)}")] : null,
                 GedcomDate.Year(p.Birth?.Date),
                 p.IsDeceased ? true : null);
         }).ToList();
@@ -122,17 +123,5 @@ public class ChartDataService(DataStore store)
             confirmed ? true : null);
     }
 
-    private static string Join(params string?[] parts) =>
-        string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p)));
-
     private static string? NullIfEmpty(string s) => s.Length == 0 ? null : s;
-
-    /// <summary>Thumbnail path convention shared with <see cref="PhotoService"/>.</summary>
-    public static string ThumbPath(string mainFile)
-    {
-        var dir = Path.GetDirectoryName(mainFile)?.Replace('\\', '/');
-        var name = Path.GetFileNameWithoutExtension(mainFile);
-        var thumb = $"{name}_thumb.webp";
-        return string.IsNullOrEmpty(dir) ? thumb : $"{dir}/{thumb}";
-    }
 }

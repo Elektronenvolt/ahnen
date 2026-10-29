@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Ahnen.Web.Helpers;
 using Ahnen.Web.Models;
 
 namespace Ahnen.Web.Services;
@@ -109,8 +110,8 @@ public class DataStore
     private static T Clone<T>(T value) =>
         JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value, JsonOptions), JsonOptions)!;
 
-    public IReadOnlyList<Person> Persons { get { lock (_gate) return _data.Persons.Select(Clone).ToList(); } }
-    public IReadOnlyList<Family> Families { get { lock (_gate) return _data.Families.Select(Clone).ToList(); } }
+    public IReadOnlyList<Person> Persons { get { lock (_gate) return Clone(_data.Persons); } }
+    public IReadOnlyList<Family> Families { get { lock (_gate) return Clone(_data.Families); } }
     public string? RootPersonId { get { lock (_gate) return _data.RootPersonId; } }
 
     public Person? GetPerson(string id)
@@ -142,26 +143,16 @@ public class DataStore
     }
 
     public IReadOnlyList<Person> ParentsOf(string personId) =>
-        FamiliesAsChild(personId).SelectMany(f => f.PartnerIds)
-            .Distinct().Select(GetPerson).Where(p => p is not null).Cast<Person>().ToList();
+        PersonsByIds(FamiliesAsChild(personId).SelectMany(f => f.PartnerIds));
+
+    public IReadOnlyList<Person> PartnersOf(string personId) =>
+        PersonsByIds(FamiliesAsPartner(personId).SelectMany(f => f.PartnerIds).Where(id => id != personId));
 
     public IReadOnlyList<Person> ChildrenOf(string personId) =>
-        FamiliesAsPartner(personId).SelectMany(f => f.ChildRefs.Select(c => c.PersonId))
-            .Distinct().Select(GetPerson).Where(p => p is not null).Cast<Person>().ToList();
+        PersonsByIds(FamiliesAsPartner(personId).SelectMany(f => f.ChildRefs.Select(c => c.PersonId)));
 
-    /// <summary>All ancestor IDs of a person (used for cycle prevention).</summary>
-    public HashSet<string> AncestorIds(string personId)
-    {
-        var result = new HashSet<string>();
-        var queue = new Queue<string>([personId]);
-        while (queue.Count > 0)
-        {
-            foreach (var parent in ParentsOf(queue.Dequeue()))
-                if (result.Add(parent.Id))
-                    queue.Enqueue(parent.Id);
-        }
-        return result;
-    }
+    private IReadOnlyList<Person> PersonsByIds(IEnumerable<string> ids) =>
+        ids.Distinct().Select(GetPerson).OfType<Person>().ToList();
 
     // ---- person CRUD ---------------------------------------------------
 
@@ -177,15 +168,6 @@ public class DataStore
             d.Persons.Add(person);
             d.RootPersonId ??= person.Id;
             return person;
-        });
-
-    public void UpdatePerson(Person person) =>
-        Mutate(d =>
-        {
-            var i = d.Persons.FindIndex(p => p.Id == person.Id);
-            if (i < 0) throw new InvalidOperationException($"Unknown person {person.Id}");
-            d.Persons[i] = person;
-            return true;
         });
 
     public void UpdatePersonFacts(Person person) =>
@@ -245,9 +227,7 @@ public class DataStore
             {
                 family.PartnerIds.Remove(personId);
                 family.ChildRefs.RemoveAll(c => c.PersonId == personId);
-                // A childless family needs two partners to still carry meaning.
-                if (family.ChildRefs.Count == 0 && family.PartnerIds.Count <= 1)
-                    d.Families.Remove(family);
+                d.PruneIfObsolete(family);
             }
             if (d.RootPersonId == personId)
                 d.RootPersonId = d.Persons.FirstOrDefault()?.Id;
@@ -294,7 +274,7 @@ public class DataStore
         {
             if (parentId == childId)
                 throw new InvalidOperationException("A person cannot be their own child.");
-            if (AncestorIdsUnsafe(d, parentId).Contains(childId))
+            if (d.AncestorsOf(parentId).Contains(childId))
                 throw new InvalidOperationException("This link would make someone their own ancestor.");
 
             Family? family = familyId is not null
@@ -320,7 +300,7 @@ public class DataStore
         {
             if (parentId == childId)
                 throw new InvalidOperationException("A person cannot be their own parent.");
-            if (AncestorIdsUnsafe(d, parentId).Contains(childId))
+            if (d.AncestorsOf(parentId).Contains(childId))
                 throw new InvalidOperationException("This link would make someone their own ancestor.");
 
             // Prefer a parent family of the child that still has room (max 2 partners).
@@ -344,8 +324,7 @@ public class DataStore
             var family = d.Families.FirstOrDefault(f => f.Id == familyId)
                 ?? throw new InvalidOperationException($"Unknown family {familyId}");
             family.PartnerIds.Remove(personId);
-            if (family.ChildRefs.Count == 0 && family.PartnerIds.Count <= 1)
-                d.Families.Remove(family);
+            d.PruneIfObsolete(family);
             return true;
         });
 
@@ -356,8 +335,7 @@ public class DataStore
             var family = d.Families.FirstOrDefault(f => f.Id == familyId)
                 ?? throw new InvalidOperationException($"Unknown family {familyId}");
             family.ChildRefs.RemoveAll(c => c.PersonId == childId);
-            if (family.ChildRefs.Count == 0 && family.PartnerIds.Count <= 1)
-                d.Families.Remove(family);
+            d.PruneIfObsolete(family);
             return true;
         });
 
@@ -381,22 +359,6 @@ public class DataStore
         });
 
     // ---- helpers --------------------------------------------------------
-
-    private static HashSet<string> AncestorIdsUnsafe(FamilyTreeData d, string personId)
-    {
-        var result = new HashSet<string>();
-        var queue = new Queue<string>([personId]);
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            foreach (var parent in d.Families
-                         .Where(f => f.ChildRefs.Any(c => c.PersonId == current))
-                         .SelectMany(f => f.PartnerIds))
-                if (result.Add(parent))
-                    queue.Enqueue(parent);
-        }
-        return result;
-    }
 
     private static string NextId(IEnumerable<string> existing, char prefix)
     {
