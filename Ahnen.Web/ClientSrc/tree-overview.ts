@@ -72,6 +72,8 @@ export function applyDetailLevel(element: Element | null | undefined, scale: num
 
 const personOf = (node: OverviewNode) => node.data.indi?.id ?? '';
 
+const sexKind = (sex?: string) => (sex === 'F' ? 'female' : sex === 'M' ? 'male' : 'unknown');
+
 /** Marks one person (every card and chip showing them) as selected in a rendered overview. */
 export function markSelected(svgElement: Element, personId: string | null): void {
   select(svgElement).selectAll<SVGGElement, OverviewNode | OverviewCard>('g.node, g.overview-chip')
@@ -120,10 +122,7 @@ export function renderOverview(
   const height = Math.max(0, ...nodes.map(node => node.data.height ?? 0));
   const chips = group.append('g').attr('class', 'overview-layer overview-chips')
     .selectAll<SVGGElement, OverviewCard>('g').data(layout.cards).join('g')
-    .attr('class', card => {
-      const sex = people.get(card.person)?.sex;
-      return `overview-chip ${sex === 'F' ? 'female' : sex === 'M' ? 'male' : 'unknown'}${card.ghost ? ' ghost' : ''}`;
-    })
+    .attr('class', card => `overview-chip ${sexKind(people.get(card.person)?.sex)}${card.ghost ? ' ghost' : ''}`)
     .attr('transform', card => `translate(${card.x - width / 2},${card.y - height / 2})`);
   chips.append('rect').attr('width', width).attr('height', height).attr('rx', 8);
   chips.each(function (card) {
@@ -168,7 +167,7 @@ export function renderOverview(
     bounds: layout.bounds,
     rects: layout.cards.map(card => ({
       x: card.x - width / 2, y: card.y - height / 2, width, height,
-      kind: card.ghost ? 'ghost' : people.get(card.person)?.sex === 'F' ? 'female' : people.get(card.person)?.sex === 'M' ? 'male' : 'unknown'
+      kind: card.ghost ? 'ghost' : sexKind(people.get(card.person)?.sex)
     }))
   };
   const size: [number, number] = [layout.bounds.width, layout.bounds.height];

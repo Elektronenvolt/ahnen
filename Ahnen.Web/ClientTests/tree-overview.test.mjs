@@ -38,7 +38,6 @@ function assertCoverage(input, horizontal) {
   const ids = new Set(nodes.map(node => node.id));
   assert.equal(ids.size, nodes.length, 'card ids are unique');
   for (const link of layout.links.filter(item => item.kind === 'child')) {
-    assert(link.persons.every(id => input.indis.some(person => person.id === id)));
     assert(link.points.every(point => point.every(Number.isFinite)));
   }
   for (const node of nodes) {

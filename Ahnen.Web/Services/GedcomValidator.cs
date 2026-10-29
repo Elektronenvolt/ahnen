@@ -55,8 +55,8 @@ public static class GedcomValidator
             $"Unknown root person {data.RootPersonId}");
 
         // No ancestry cycles.
-        foreach (var p in data.Persons)
-            Require(!data.AncestorsOf(p.Id).Contains(p.Id), $"{p.Id} would be their own ancestor");
+        var cyclic = data.FindPersonInOwnAncestry();
+        Require(cyclic is null, $"{cyclic} would be their own ancestor");
     }
 
     private static void Require(bool condition, string message)

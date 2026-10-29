@@ -34,6 +34,16 @@ public class HelpersTests
     }
 
     [Fact]
+    public void FindPersonInOwnAncestry_reports_a_cyclic_person_only_for_cycles()
+    {
+        var data = Tree();
+        Assert.Null(data.FindPersonInOwnAncestry());
+
+        data.Families[0].PartnerIds.Add("c");
+        Assert.NotNull(data.FindPersonInOwnAncestry());
+    }
+
+    [Fact]
     public void PruneIfObsolete_removes_only_childless_families_with_at_most_one_partner()
     {
         var data = Tree();
