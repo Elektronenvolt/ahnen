@@ -136,6 +136,8 @@ webp together with a 160×160 thumbnail. The JSON only stores the relative path.
 
 The **Logs** section at the bottom of every page starts collapsed and can be expanded with the
 keyboard or mouse. It shows timestamp, level, category, event ID, message, and exception details.
+Only level labels are severity-colored: Warning is orange, Error and Critical are red,
+and Information, Debug, and Trace retain the default text color. All other entry text is unchanged.
 While expanded, it refreshes approximately once per second. The latest 500 entries are kept in
 process memory, including startup errors, and are cleared on restart.
 
