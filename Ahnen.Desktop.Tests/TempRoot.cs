@@ -6,7 +6,13 @@ public sealed class TempRoot : IDisposable
     public string Path { get; } =
         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ahnen-desktop-tests-" + Guid.NewGuid().ToString("N"));
 
-    public Ahnen.Desktop.Services.DesktopPaths Paths => new(Path);
+    public Ahnen.Desktop.Services.DesktopPaths Paths => new(Path, System.IO.Path.Combine(Path, "application"));
+
+    public TempRoot()
+    {
+        Directory.CreateDirectory(Paths.DataDirectory);
+        File.WriteAllText(Paths.ConfigurationFile, "{\"DataFileName\":\"familytree.json\"}");
+    }
 
     public void Dispose()
     {

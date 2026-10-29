@@ -71,9 +71,31 @@ Open the printed URL (e.g. http://localhost:5205). The configured `data/familytr
 a supplied 200-person test tree. The application loads the selected file directly; there is no
 first-run seeding or automatic replacement of saved trees.
 
-### Data storage
+### Desktop application (Windows)
 
-All data lives in one folder — **backing up your tree = copying one folder**:
+Run `dotnet run --project Ahnen.Desktop`. The desktop build and publish outputs include
+`familytree.json` and `appsettings.json` directly beside the executable (not in `data/`).
+The desktop application always resolves both files from its executable folder, regardless of
+its working directory. Select the tree by filename only in that `appsettings.json`:
+
+```json
+{
+  "DataFileName": "familytree.json"
+}
+```
+
+Paths and subdirectories are not allowed. Missing or invalid configuration or data is logged
+and disables editing; no replacement tree is created. Saves and `.bak` backups stay beside the
+selected file; photos use the `photos/` subfolder. The application folder must be writable.
+Back up your tree before rebuilding or publishing into a used application folder: deployment
+can replace the supplied files. Existing desktop trees must be moved from
+`%LOCALAPPDATA%\Ahnen\data` into the executable folder explicitly; they are not migrated automatically.
+Language preferences remain in `%LOCALAPPDATA%\Ahnen\settings.json`; `AHNEN_DESKTOP_ROOT`
+overrides only that preferences location, not the tree or application configuration.
+
+### Web data storage
+
+All data lives in one folder
 
 ```
 Ahnen.Web/data/

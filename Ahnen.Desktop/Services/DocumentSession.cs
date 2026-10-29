@@ -1,12 +1,13 @@
 using System.IO;
+using System.Text.Json;
 using Ahnen.Core.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Ahnen.Desktop.Services;
 
 /// <summary>
-/// Opens the desktop document from the per-user data folder. A missing document leaves the store
-/// read-only (import is a later step); an unreadable one is reported instead of crashing startup.
+/// Opens the configured document beside the application. Missing data leaves the store read-only;
+/// unreadable data or configuration is reported instead of crashing startup.
 /// </summary>
 public sealed class DocumentSession
 {
@@ -18,12 +19,17 @@ public sealed class DocumentSession
     {
         try
         {
-            Store = new DataStore(new DataStoreOptions(paths.DataDirectory, DesktopPaths.DocumentFileName), storeLogger);
+            var configuration = JsonSerializer.Deserialize<DesktopConfiguration>(File.ReadAllText(paths.ConfigurationFile))
+                ?? throw new JsonException("The desktop configuration must contain an object.");
+            Store = new DataStore(new DataStoreOptions(paths.DataDirectory, configuration.DataFileName), storeLogger);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
             LoadError = ex.Message;
-            logger.LogError(ex, "The document in {DataDirectory} could not be loaded.", paths.DataDirectory);
+            logger.LogError(ex, "The configuration {ConfigurationFile} or document in {DataDirectory} could not be loaded.",
+                paths.ConfigurationFile, paths.DataDirectory);
         }
     }
+
+    private sealed record DesktopConfiguration(string? DataFileName);
 }

@@ -35,7 +35,8 @@ public class PreferencesAndDocumentTests : IDisposable
     {
         var paths = _root.Paths;
 
-        Assert.Equal(Path.Combine(_root.Path, "data"), paths.DataDirectory);
+        Assert.Equal(Path.Combine(_root.Path, "application"), paths.DataDirectory);
+        Assert.Equal(Path.Combine(paths.DataDirectory, "appsettings.json"), paths.ConfigurationFile);
         Assert.Equal(_root.Path, Path.GetDirectoryName(paths.SettingsFile));
     }
 
@@ -96,6 +97,81 @@ public class PreferencesAndDocumentTests : IDisposable
 
         Assert.True(session.HasDocument);
         Assert.Null(session.LoadError);
+    }
+
+    [Fact]
+    public void Default_data_location_is_the_executable_folder_not_the_preferences_root()
+    {
+        var paths = new DesktopPaths(_root.Path);
+
+        Assert.Equal(AppContext.BaseDirectory, paths.DataDirectory);
+        Assert.Equal(Path.Combine(AppContext.BaseDirectory, "appsettings.json"), paths.ConfigurationFile);
+        Assert.Equal(Path.Combine(_root.Path, "settings.json"), paths.SettingsFile);
+    }
+
+    [Fact]
+    public void Configured_filename_is_used_instead_of_the_supplied_tree()
+    {
+        WriteDocument("invalid json");
+        File.WriteAllText(_root.Paths.ConfigurationFile, "{\"DataFileName\":\"other.json\"}");
+        File.WriteAllText(Path.Combine(_root.Paths.DataDirectory, "other.json"), "{}");
+
+        var session = Session();
+
+        Assert.True(session.HasDocument);
+        Assert.Null(session.LoadError);
+        Assert.Equal(_root.Paths.DataDirectory, session.Store!.DataDirectory);
+        Assert.Empty(_logs.Snapshot());
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"DataFileName\":null}")]
+    [InlineData("{\"DataFileName\":\"\"}")]
+    [InlineData("{\"DataFileName\":\"../familytree.json\"}")]
+    [InlineData("{\"DataFileName\":\"data/familytree.json\"}")]
+    [InlineData("{\"DataFileName\":\"C:\\\\familytree.json\"}")]
+    public void Invalid_filename_disables_editing_and_logs_an_error(string configuration)
+    {
+        WriteDocument("{}");
+        File.WriteAllText(_root.Paths.ConfigurationFile, configuration);
+
+        var session = Session();
+
+        Assert.False(session.HasDocument);
+        Assert.NotNull(session.Store);
+        Assert.Contains(_logs.Snapshot(), e => e.Level == LogLevel.Error && e.Message.Contains("DataFileName"));
+    }
+
+    [Theory]
+    [InlineData("invalid json")]
+    [InlineData("null")]
+    [InlineData("{\"DataFileName\":42}")]
+    public void Malformed_configuration_is_reported_without_loading_the_default_tree(string configuration)
+    {
+        WriteDocument("{}");
+        File.WriteAllText(_root.Paths.ConfigurationFile, configuration);
+
+        var session = Session();
+
+        Assert.False(session.HasDocument);
+        Assert.Null(session.Store);
+        Assert.NotNull(session.LoadError);
+        Assert.Contains(_logs.Snapshot(), e => e.Level == LogLevel.Error);
+    }
+
+    [Fact]
+    public void Missing_configuration_is_reported_without_loading_the_default_tree()
+    {
+        WriteDocument("{}");
+        File.Delete(_root.Paths.ConfigurationFile);
+
+        var session = Session();
+
+        Assert.False(session.HasDocument);
+        Assert.Null(session.Store);
+        Assert.NotNull(session.LoadError);
+        Assert.Contains(_logs.Snapshot(), e => e.Level == LogLevel.Error);
     }
 
     [Fact]
