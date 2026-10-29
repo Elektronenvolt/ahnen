@@ -33,7 +33,6 @@ export interface OverviewCard {
   y: number;
   /** Layout level of the lane (see `generationIdentifier`). */
   generation: number;
-  block: number;
 }
 
 export interface OverviewJunction {
@@ -41,7 +40,6 @@ export interface OverviewJunction {
   x: number;
   y: number;
   status: string;
-  year?: number;
   hasChildren: boolean;
   /** The children continue in another block (this junction then has no links of its own). */
   continued: boolean;
@@ -54,13 +52,10 @@ export interface OverviewLink {
   family?: string;
   status?: string;
   adopted?: boolean;
-  /** People the link belongs to (for highlighting). */
-  persons: string[];
   points: [number, number][];
 }
 
 export interface OverviewLane {
-  block: number;
   generation: number;
   label: string;
   x: number;
@@ -78,7 +73,6 @@ export interface OverviewLayout {
   warnings: Set<string>;
   /** Shared graph model (generations, neighbourhoods). */
   base: TreeLayout;
-  stats: { people: number; ghosts: number; blocks: number };
 }
 
 export const COUPLE_GAP = 30;
@@ -115,7 +109,6 @@ interface Unit {
   hostIndex: number;
   marriages: Marriage[];
   lane: number;
-  block: number;
   hull: [number, number];
   /** Offset of this unit's host card from the parent's host card (children only). */
   dx: number;
@@ -185,10 +178,10 @@ export function layoutOverview(
     id: ghost ? `${person}~g${++ghostCount}` : person, person, ghost, dx: 0, x: 0, y: 0
   });
 
-  function buildUnit(host: string, ghostHost: boolean, block: number, parent: Unit | null): Unit {
+  function buildUnit(host: string, ghostHost: boolean, parent: Unit | null): Unit {
     if (!ghostHost) placed.add(host);
     const unit: Unit = {
-      row: [], hostIndex: 0, marriages: [], lane: 0, block, hull: [0, 0], dx: 0, parent
+      row: [], hostIndex: 0, marriages: [], lane: 0, hull: [0, 0], dx: 0, parent
     };
     const hostCard = makeCard(host, ghostHost);
     const mine = (familiesOf.get(host) ?? []).filter(family => !claimed.has(family.id));
@@ -212,7 +205,7 @@ export function layoutOverview(
     for (const marriage of unit.marriages)
       for (const child of marriage.family.children ?? [])
         if (origin.get(child) === marriage.family.id && !placed.has(child))
-          marriage.children.push(buildUnit(child, false, block, unit));
+          marriage.children.push(buildUnit(child, false, unit));
     return unit;
   }
 
@@ -221,7 +214,7 @@ export function layoutOverview(
   const roots: Unit[] = [];
   const sortedIds = [...people].sort();
   const startRoot = (id: string, ghostHost = false) => {
-    const unit = buildUnit(id, ghostHost, roots.length, null);
+    const unit = buildUnit(id, ghostHost, null);
     roots.push(unit);
   };
   for (const id of sortedIds)
@@ -309,7 +302,7 @@ export function layoutOverview(
     const spouse = marriage.spouse ? makeCard(marriage.spouse.person, true) : null;
     const header: Unit = {
       row: [makeCard(host.person, true), ...(spouse ? [spouse] : [])], hostIndex: 0, marriages: [],
-      lane: unit.lane, block: 0, hull: [0, 0], dx: 0, parent: null
+      lane: unit.lane, hull: [0, 0], dx: 0, parent: null
     };
     header.marriages.push({ family: marriage.family, order: 0, spouse, children: marriage.children, junctionDx: 0 });
     for (const child of marriage.children) child.parent = header;
@@ -378,7 +371,6 @@ export function layoutOverview(
   }));
   treeKey.sort((a, b) => Number(b.root) - Number(a.root) || b.people - a.people || a.id.localeCompare(b.id));
   const blocks: Block[] = treeKey.flatMap(tree => tree.list);
-  blocks.forEach((block, index) => block.units.forEach(unit => { unit.block = index; }));
 
   // ----- shelf-pack the blocks towards the requested aspect ratio -----
   const aspect = horizontal ? 1 / options.aspect : options.aspect;
@@ -403,10 +395,10 @@ export function layoutOverview(
   const lanes: OverviewLane[] = [];
   const primary = new Map<string, Card>();
   const hostX = new Map<Unit, number>();
-  blocks.forEach((block, blockIndex) => {
+  blocks.forEach(block => {
     const laneIndex = new Map(block.lanes.map((lane, index) => [lane, index]));
     block.lanes.forEach((lane, index) => lanes.push({
-      block: blockIndex, generation: lane, label: generationIdentifier(lane),
+      generation: lane, label: generationIdentifier(lane),
       x: block.x, y: block.y + index * laneStep - LANE_GAP / 2 + 6, width: block.width, height: laneStep - 12
     }));
     const place = (unit: Unit, x: number) => {
@@ -433,7 +425,6 @@ export function layoutOverview(
     for (const marriage of unit.marriages) {
       const family = marriage.family;
       const status = family.status ?? 'NONE';
-      const persons = [host.person, ...(marriage.spouse ? [marriage.spouse.person] : [])];
       let junctionX = host.x;
       let junctionY = bottom;
       if (marriage.spouse) {
@@ -445,33 +436,33 @@ export function layoutOverview(
           junctionY = host.y;
           const sign = Math.sign(spouse.x - host.x);
           links.push({
-            kind: 'spouse', family: family.id, status, persons,
+            kind: 'spouse', family: family.id, status,
             points: [[host.x + sign * across / 2, host.y], [spouse.x - sign * across / 2, spouse.y]]
           });
         } else {
           const level = Math.abs(hostIdx - spouseIdx) - 1;
           junctionY = bottom + ARC_START + ARC_STEP * Math.min(level - 1, 3);
           links.push({
-            kind: 'spouse', family: family.id, status, persons,
+            kind: 'spouse', family: family.id, status,
             points: [[host.x, bottom], [host.x, junctionY], [spouse.x, junctionY], [spouse.x, bottom]]
           });
         }
       }
       junctions.push({
         family: family.id, x: junctionX, y: junctionY, status,
-        year: family.marriageYear ?? undefined, hasChildren: marriage.children.length > 0 || !!marriage.detached,
+        hasChildren: marriage.children.length > 0 || !!marriage.detached,
         continued: !!marriage.detached
       });
       if (marriage.children.length === 0) continue;
       const busY = bottom + LANE_GAP / 2;
       const childCards = marriage.children.map(child => child.row[child.hostIndex]);
       const xs = [junctionX, ...childCards.map(card => card.x)];
-      links.push({ kind: 'drop', family: family.id, status, persons, points: [[junctionX, junctionY], [junctionX, busY]] });
+      links.push({ kind: 'drop', family: family.id, status, points: [[junctionX, junctionY], [junctionX, busY]] });
       if (Math.min(...xs) !== Math.max(...xs))
-        links.push({ kind: 'bus', family: family.id, status, persons, points: [[Math.min(...xs), busY], [Math.max(...xs), busY]] });
+        links.push({ kind: 'bus', family: family.id, status, points: [[Math.min(...xs), busY], [Math.max(...xs), busY]] });
       for (const card of childCards)
         links.push({
-          kind: 'child', family: family.id, status, persons: [...persons, card.person],
+          kind: 'child', family: family.id, status,
           adopted: (family.pedigrees?.[card.person] ?? 'BIRTH') !== 'BIRTH',
           points: [[card.x, busY], [card.x, card.y - depth / 2]]
         });
@@ -479,7 +470,7 @@ export function layoutOverview(
     for (const card of unit.row)
       if (card.ghost) {
         const target = primary.get(card.person);
-        if (target) links.push({ kind: 'ghost', persons: [card.person], points: [[card.x, card.y], [target.x, target.y]] });
+        if (target) links.push({ kind: 'ghost', points: [[card.x, card.y], [target.x, target.y]] });
       }
   }
 
@@ -489,7 +480,7 @@ export function layoutOverview(
   for (const unit of everyUnit)
     for (const card of unit.row) {
       const [x, y] = turn(card.x, card.y);
-      cards.push({ id: card.id, person: card.person, ghost: card.ghost, x, y, generation: unit.lane, block: unit.block });
+      cards.push({ id: card.id, person: card.person, ghost: card.ghost, x, y, generation: unit.lane });
     }
   for (const link of links) link.points = link.points.map(([x, y]) => turn(x, y));
   for (const junction of junctions) [junction.x, junction.y] = turn(junction.x, junction.y);
@@ -510,7 +501,6 @@ export function layoutOverview(
   return {
     cards, junctions, links, lanes,
     bounds: { x: -MARGIN, y: -MARGIN, width: boundsWidth + 2 * MARGIN, height: boundsHeight + 2 * MARGIN },
-    warnings, base,
-    stats: { people: input.indis.length, ghosts: cards.filter(card => card.ghost).length, blocks: blocks.length }
+    warnings, base
   };
 }

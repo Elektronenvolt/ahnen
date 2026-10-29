@@ -34,7 +34,6 @@
   <data name="Detail_Partners" xml:space="preserve"><value>Partners</value></data>
   <data name="Detail_Children" xml:space="preserve"><value>Children</value></data>
   <data name="Detail_Siblings" xml:space="preserve"><value>Siblings</value></data>
-  <data name="Detail_Events" xml:space="preserve"><value>Life events</value></data>
   <data name="Edit_Search" xml:space="preserve"><value>Search…</value></data>
   <data name="Edit_NewPerson" xml:space="preserve"><value>New person</value></data>
   <data name="Edit_People" xml:space="preserve"><value>{0} people</value></data>
@@ -65,7 +64,6 @@
   <data name="Field_MarriageDate" xml:space="preserve"><value>Marriage date</value></data>
   <data name="Field_MarriagePlace" xml:space="preserve"><value>Marriage place</value></data>
   <data name="Field_Pedigree" xml:space="preserve"><value>Lineage</value></data>
-  <data name="Btn_AddName" xml:space="preserve"><value>Add name</value></data>
   <data name="Btn_AddFather" xml:space="preserve"><value>Add father</value></data>
   <data name="Btn_AddMother" xml:space="preserve"><value>Add mother</value></data>
   <data name="Btn_AddPartner" xml:space="preserve"><value>Add partner</value></data>
@@ -80,13 +78,11 @@
   <data name="Toast_Saved" xml:space="preserve"><value>Saved</value></data>
   <data name="Toast_Deleted" xml:space="preserve"><value>Deleted</value></data>
   <data name="Confirm_Delete" xml:space="preserve"><value>Delete {0}? This removes {1} relationship link(s).</value></data>
-  <data name="Picker_Title" xml:space="preserve"><value>Select person</value></data>
   <data name="Picker_New" xml:space="preserve"><value>Create new person</value></data>
   <data name="Hint_Date" xml:space="preserve"><value>e.g. 1950, 04/1950, 12.04.1950, ~1950, before 1950</value></data>
   <data name="Hint_Siblings" xml:space="preserve"><value>Siblings are derived automatically from shared parents.</value></data>
   <data name="Validation_BadDate" xml:space="preserve"><value>Could not understand this date.</value></data>
   <data name="Validation_BirthAfterDeath" xml:space="preserve"><value>Birth is after death.</value></data>
-  <data name="Warn_ParentYoung" xml:space="preserve"><value>Warning: parent would be younger than the child.</value></data>
   <data name="Sex_M" xml:space="preserve"><value>Male</value></data>
   <data name="Sex_F" xml:space="preserve"><value>Female</value></data>
   <data name="Sex_X" xml:space="preserve"><value>Other</value></data>
@@ -104,16 +100,12 @@
   <data name="Ev_IMMI" xml:space="preserve"><value>Immigration</value></data>
   <data name="Ev_NATU" xml:space="preserve"><value>Naturalization</value></data>
   <data name="Ev_EVEN" xml:space="preserve"><value>Other event</value></data>
-  <data name="Fam_None" xml:space="preserve"><value>Partners (unmarried)</value></data>
+  <data name="Fam_NONE" xml:space="preserve"><value>Partners (unmarried)</value></data>
   <data name="Fam_MARR" xml:space="preserve"><value>Married</value></data>
   <data name="Fam_DIV" xml:space="preserve"><value>Divorced</value></data>
   <data name="Fam_ANUL" xml:space="preserve"><value>Annulled</value></data>
   <data name="Fam_DIVF" xml:space="preserve"><value>Divorce filed</value></data>
   <data name="Fam_ENGA" xml:space="preserve"><value>Engaged</value></data>
-  <data name="Fam_MARB" xml:space="preserve"><value>Marriage banns</value></data>
-  <data name="Fam_MARC" xml:space="preserve"><value>Marriage contract</value></data>
-  <data name="Fam_MARL" xml:space="preserve"><value>Marriage license</value></data>
-  <data name="Fam_EVEN" xml:space="preserve"><value>Other</value></data>
   <data name="Pedi_BIRTH" xml:space="preserve"><value>Biological</value></data>
   <data name="Pedi_ADOPTED" xml:space="preserve"><value>Adopted</value></data>
   <data name="Pedi_FOSTER" xml:space="preserve"><value>Foster</value></data>

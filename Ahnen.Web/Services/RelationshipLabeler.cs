@@ -67,19 +67,15 @@ public static class RelationshipLabeler
         return Compose(degree - 2, baseWord, de);
     }
 
-    private static string UncleAunt(int degree, Sex sex, bool de)
-    {
-        var baseWord = BySex(sex, de, "onkel", "tante", "onkel/tante", "uncle", "aunt", "uncle/aunt");
-        if (degree == 0) return de ? Capitalize(baseWord) : baseWord;
-        // degree 1 = great-uncle / Großonkel; higher degrees add great-/Ur-
-        return de
-            ? Capitalize(string.Concat(Enumerable.Repeat("ur", degree - 1)) + "groß" + baseWord)
-            : string.Concat(Enumerable.Repeat("great-", degree)) + baseWord;
-    }
+    private static string UncleAunt(int degree, Sex sex, bool de) =>
+        Collateral(degree, BySex(sex, de, "onkel", "tante", "onkel/tante", "uncle", "aunt", "uncle/aunt"), de);
 
-    private static string NephewNiece(int degree, Sex sex, bool de)
+    private static string NephewNiece(int degree, Sex sex, bool de) =>
+        Collateral(degree, BySex(sex, de, "neffe", "nichte", "neffe/nichte", "nephew", "niece", "nephew/niece"), de);
+
+    /// <summary>Degree 0 = plain word; higher degrees add great-/Ur-groß (degree 1 = great-uncle / Großonkel).</summary>
+    private static string Collateral(int degree, string baseWord, bool de)
     {
-        var baseWord = BySex(sex, de, "neffe", "nichte", "neffe/nichte", "nephew", "niece", "nephew/niece");
         if (degree == 0) return de ? Capitalize(baseWord) : baseWord;
         return de
             ? Capitalize(string.Concat(Enumerable.Repeat("ur", degree - 1)) + "groß" + baseWord)

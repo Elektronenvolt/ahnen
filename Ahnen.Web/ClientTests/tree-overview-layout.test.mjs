@@ -89,7 +89,7 @@ for (const horizontal of [false, true])
     assert(ratio <= 3, `aspect ratio ${ratio.toFixed(2)} is at most 3:1`);
     const fitScale = Math.min(1600 / width, 800 / height);
     assert(fitScale >= 0.2, `fit scale ${fitScale.toFixed(3)} is at least 0.2 (was 0.07)`);
-    console.log(`  ${horizontal ? 'h' : 'v'}: ${Math.round(width)}x${Math.round(height)} ratio ${ratio.toFixed(2)} fit ${fitScale.toFixed(3)} ghosts ${layout.stats.ghosts} blocks ${layout.stats.blocks}`);
+    console.log(`  ${horizontal ? 'h' : 'v'}: ${Math.round(width)}x${Math.round(height)} ratio ${ratio.toFixed(2)} fit ${fitScale.toFixed(3)}`);
   });
 
 test('200-person tree: parents sit above their children and each marriage has a junction', () => {

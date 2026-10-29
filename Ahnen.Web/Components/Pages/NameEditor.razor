@@ -82,7 +82,7 @@
         {
             <div class="name-editor-error" role="alert">
                 <span>@_error</span>
-                <button type="button" class="btn btn-small" @onclick="RetrySave">@L["Name_Retry"]</button>
+                <button type="button" class="btn btn-small" @onclick="() => TrySave()">@L["Name_Retry"]</button>
                 <button type="button" class="btn btn-small" @onclick="Reload">@L["Name_Reload"]</button>
             </div>
         }
@@ -245,8 +245,6 @@
         _state.RemoveSelected();
         TrySave();
     }
-
-    private void RetrySave() => TrySave();
 
     private void Reload()
     {

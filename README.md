@@ -246,11 +246,13 @@ Ahnen.Web/
 │                  RelationshipService (derives kinship labels),
 │                  ChartDataService (Topola JSON mapping), PhotoService (SkiaSharp),
 │                  ApplicationLogBuffer / ApplicationLogProvider (live log history)
+├── Helpers/       small shared extensions (ancestry walk, marriage event, text join, photo paths)
 ├── Components/    Blazor pages: Tree (/) and Edit (/edit)
 ├── ClientSrc/     tree.ts — Topola + d3-zoom, tree3d.ts — Three.js renderer,
 │                  tree3d-layout.ts — pure family graph layout and neighborhood selection,
 │                  tree-overview-layout.ts — pure family-unit layout of the 2D overview,
-│                  tree-overview.ts / tree-minimap.ts — overview rendering, minimap (esbuild)
+│                  tree-overview.ts / tree-minimap.ts — overview rendering, minimap,
+│                  tree-depth.ts — generation limit, shared.ts — shared types (esbuild)
 ├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
 ├── tools/         generate-sample-tree.mjs — deterministic sample data generator
 ├── Resources/     en/de string resources

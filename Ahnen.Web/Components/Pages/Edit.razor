@@ -1,5 +1,6 @@
 @page "/edit"
 @using System.Globalization
+@using Ahnen.Web.Helpers
 @using Ahnen.Web.Models
 @using Ahnen.Web.Services
 @using Microsoft.Extensions.Localization
@@ -7,7 +8,6 @@
 @inject DataStore Store
 @inject PhotoService Photos
 @inject IStringLocalizer<SharedResources> L
-@inject NavigationManager Nav
 
 <PageTitle>@L["AppTitle"] – @L["Nav_Edit"]</PageTitle>
 
@@ -26,7 +26,7 @@
                         <button @onclick="() => Select(p.Id)">
                             @if (p.PhotoFile is { } photo)
                             {
-                                <img class="person-avatar" src="/media/@ChartDataService.ThumbPath(photo)" alt=""/>
+                                <img class="person-avatar" src="/media/@PhotoPaths.ThumbPath(photo)" alt=""/>
                             }
                             else
                             {
@@ -150,10 +150,14 @@
 
                 <details class="editor-section" open>
                     <summary>@L["Section_Relationships"]</summary>
+                    @{
+                        var parentFamilies = Store.FamiliesAsChild(_personId!);
+                        var partnerFamilies = Store.FamiliesAsPartner(_personId!);
+                    }
 
                     <div class="rel-group">
                         <h4>@L["Detail_Parents"]</h4>
-                        @foreach (var family in Store.FamiliesAsChild(_personId!))
+                        @foreach (var family in parentFamilies)
                         {
                             var fam = family;
                             foreach (var parentId in fam.PartnerIds)
@@ -165,7 +169,7 @@
                                             @onclick="() => Select(parent.Id)">@parent.DisplayName</button>
                                     <span class="relation-years">@parent.LifeYears</span>
                                     <button class="btn-icon" title="@L["Btn_Unlink"]"
-                                            @onclick="() => UnlinkParent(fam.Id, parent.Id)">✕
+                                            @onclick="() => UnlinkPartner(fam.Id, parent.Id)">✕
                                     </button>
                                 </div>
                             }
@@ -173,7 +177,7 @@
                             var childRef = fam.ChildRefs.First(c => c.PersonId == _personId);
                             <label class="rel-pedigree">@L["Field_Pedigree"]
                                 <select class="input" value="@childRef.Pedigree"
-                                        @onchange="e => SetPedigree(fam.Id, e.Value!.ToString()!)">
+                                        @onchange="e => SetChildPedigree(fam.Id, _personId!, e.Value!.ToString()!)">
                                     @foreach (var pd in Enum.GetValues<Pedigree>())
                                     {
                                         <option value="@pd">@(L[$"Pedi_{pd}"])</option>
@@ -182,7 +186,7 @@
                             </label>
                         }
                         <div class="rel-actions">
-                            @if (CanAddParent())
+                            @if (parentFamilies.SelectMany(f => f.PartnerIds).Distinct().Count() < 2)
                             {
                                 <button class="btn btn-small" @onclick='() => OpenPicker("father")'>
                                     ＋ @L["Btn_AddFather"]</button>
@@ -195,7 +199,7 @@
 
                     <div class="rel-group">
                         <h4>@L["Detail_Partners"] / @L["Detail_Children"]</h4>
-                        @foreach (var family in Store.FamiliesAsPartner(_personId!))
+                        @foreach (var family in partnerFamilies)
                         {
                             var fam = family;
                             var partner = fam.OtherPartner(_personId!) is { } pid ? Store.GetPerson(pid) : null;
@@ -268,7 +272,7 @@
                         <div class="rel-actions">
                             <button class="btn btn-small" @onclick='() => OpenPicker("partner")'>
                                 ＋ @L["Btn_AddPartner"]</button>
-                            @if (!Store.FamiliesAsPartner(_personId!).Any())
+                            @if (partnerFamilies.Count == 0)
                             {
                                 <button class="btn btn-small" @onclick='() => OpenPicker("child")'>
                                     ＋ @L["Btn_AddChild"]</button>
@@ -409,7 +413,7 @@
         Store.EnsureCanEdit();
         if (!TryFlushNames()) return;
         FlushSave();
-        var person = Store.AddPerson("", "", Sex.U);
+        var person = Store.AddPerson("", "");
         Select(person.Id);
         ShowToast(L["Toast_Saved"]);
     }
@@ -542,10 +546,6 @@
 
     // ---- relationships ---------------------------------------------------
 
-    private bool CanAddParent() =>
-        _personId is not null &&
-        Store.FamiliesAsChild(_personId).SelectMany(f => f.PartnerIds).Distinct().Count() < 2;
-
     private void OpenPicker(string mode, string? familyId = null)
     {
         FlushSave();
@@ -553,10 +553,10 @@
         _pickerFamilyId = familyId;
         (_pickerTitle, _pickerSex) = mode switch
         {
-            "father" => ((string)L["Btn_AddFather"], Sex.M),
-            "mother" => ((string)L["Btn_AddMother"], Sex.F),
-            "partner" => ((string)L["Btn_AddPartner"], Sex.U),
-            _ => ((string)L["Btn_AddChild"], Sex.U)
+            "father" => (L["Btn_AddFather"].Value, Sex.M),
+            "mother" => (L["Btn_AddMother"].Value, Sex.F),
+            "partner" => (L["Btn_AddPartner"].Value, Sex.U),
+            _ => (L["Btn_AddChild"].Value, Sex.U)
         };
         _pickerVisible = true;
     }
@@ -595,13 +595,6 @@
 
     private string? _errorMessage;
 
-    private void UnlinkParent(string familyId, string parentId)
-    {
-        Store.RemovePartner(familyId, parentId);
-        Select(_personId!);
-        ShowToast(L["Toast_Saved"]);
-    }
-
     private void UnlinkPartner(string familyId, string partnerId)
     {
         Store.RemovePartner(familyId, partnerId);
@@ -613,12 +606,6 @@
     {
         Store.RemoveChild(familyId, childId);
         Select(_personId!);
-        ShowToast(L["Toast_Saved"]);
-    }
-
-    private void SetPedigree(string familyId, string value)
-    {
-        Store.SetChildPedigree(familyId, _personId!, Enum.Parse<Pedigree>(value));
         ShowToast(L["Toast_Saved"]);
     }
 
@@ -639,34 +626,19 @@
 
     private void SetMarriageDate(string familyId, string? input)
     {
-        var family = Store.GetFamily(familyId);
-        if (family is null) return;
         var normalized = GedcomDate.Normalize(input);
         if (input is { Length: > 0 } && normalized is null) return;
-        var marr = family.Events.FirstOrDefault(e => e.Type == FamilyEventType.MARR);
-        if (marr is null)
-        {
-            marr = new FamilyEvent { Type = FamilyEventType.MARR };
-            family.Events.Insert(0, marr);
-        }
-
-        marr.Date = normalized;
-        Store.UpdateFamily(family);
-        ShowToast(L["Toast_Saved"]);
+        UpdateMarriage(familyId, marriage => marriage.Date = normalized);
     }
 
-    private void SetMarriagePlace(string familyId, string? place)
+    private void SetMarriagePlace(string familyId, string? place) =>
+        UpdateMarriage(familyId, marriage => marriage.Place = Trim(place ?? ""));
+
+    private void UpdateMarriage(string familyId, Action<FamilyEvent> update)
     {
         var family = Store.GetFamily(familyId);
         if (family is null) return;
-        var marr = family.Events.FirstOrDefault(e => e.Type == FamilyEventType.MARR);
-        if (marr is null)
-        {
-            marr = new FamilyEvent { Type = FamilyEventType.MARR };
-            family.Events.Insert(0, marr);
-        }
-
-        marr.Place = Trim(place ?? "");
+        update(family.GetOrAddMarriage());
         Store.UpdateFamily(family);
         ShowToast(L["Toast_Saved"]);
     }

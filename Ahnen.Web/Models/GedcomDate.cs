@@ -16,6 +16,18 @@ public static partial class GedcomDate
     [GeneratedRegex(@"^(?:(?<q>ABT|BEF|AFT)\s+)?(?:(?:(?<d>\d{1,2})\s+)?(?<m>[A-Z]{3})\s+)?(?<y>\d{1,4})$")]
     private static partial Regex CanonicalRegex();
 
+    [GeneratedRegex(@"^(~|about|abt\.?|ca\.?|circa|<|before|bef\.?|vor|>|after|aft\.?|nach)\s*", RegexOptions.IgnoreCase)]
+    private static partial Regex QualifierRegex();
+
+    [GeneratedRegex(@"^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$")]
+    private static partial Regex IsoRegex();
+
+    [GeneratedRegex(@"^(?:(\d{1,2})[./])?(\d{1,2})[./](\d{3,4})$")]
+    private static partial Regex EuropeanRegex();
+
+    [GeneratedRegex(@"^\d{3,4}$")]
+    private static partial Regex YearRegex();
+
     /// <summary>True when <paramref name="value"/> is a canonical GEDCOM date this app supports.</summary>
     public static bool IsValid(string? value)
     {
@@ -44,8 +56,7 @@ public static partial class GedcomDate
         var s = input.Trim();
 
         var qualifier = "";
-        var qm = Regex.Match(s, @"^(~|about|abt\.?|ca\.?|circa|<|before|bef\.?|vor|>|after|aft\.?|nach)\s*",
-            RegexOptions.IgnoreCase);
+        var qm = QualifierRegex().Match(s);
         if (qm.Success)
         {
             var q = qm.Groups[1].Value.ToLowerInvariant().TrimEnd('.');
@@ -62,17 +73,17 @@ public static partial class GedcomDate
         if (IsValid(upper)) return qualifier + upper;
 
         // ISO: 1950-04-12 or 1950-04
-        var iso = Regex.Match(s, @"^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$");
+        var iso = IsoRegex().Match(s);
         if (iso.Success)
             return Build(qualifier, iso.Groups[3].Value, iso.Groups[2].Value, iso.Groups[1].Value);
 
         // European d.m.yyyy / d/m/yyyy, or m.yyyy / m/yyyy
-        var eu = Regex.Match(s, @"^(?:(\d{1,2})[./])?(\d{1,2})[./](\d{3,4})$");
+        var eu = EuropeanRegex().Match(s);
         if (eu.Success)
             return Build(qualifier, eu.Groups[1].Value, eu.Groups[2].Value, eu.Groups[3].Value);
 
         // Year only
-        var yr = Regex.Match(s, @"^\d{3,4}$");
+        var yr = YearRegex().Match(s);
         if (yr.Success) return qualifier + yr.Value;
 
         // Culture-aware parsing as a last resort ("12 April 1950", "April 12, 1950")

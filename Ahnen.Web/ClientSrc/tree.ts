@@ -18,6 +18,7 @@ import { clearSelection3d, destroy3d, fit3d, focus3d, init3d, update3d, zoom3d }
 import { applyDetailLevel, markSelected, overviewModel, renderOverview } from './tree-overview';
 import { Minimap, type MinimapModel } from './tree-minimap';
 import { limitDepth } from './tree-depth';
+import type { DotNetRef } from './shared';
 import type { OverviewFam } from './tree-overview-layout';
 
 export type ChartKind = 'hourglass' | 'relatives' | 'ancestors' | 'descendants';
@@ -36,10 +37,6 @@ export interface TreeOptions {
   /** Generations of ancestors/descendants drawn around the focus person; 0 shows all. */
   depth: number;
   viewMode: '2d' | '3d';
-}
-
-interface DotNetRef {
-  invokeMethodAsync(method: string, ...args: unknown[]): Promise<unknown>;
 }
 
 const STORAGE_KEY = 'ahnen.tree.options';

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Ahnen.Web.Helpers;
 
 namespace Ahnen.Web.Models;
 
@@ -13,8 +14,7 @@ public class PersonName
     public string? Nickname { get; set; } // NICK
 
     [JsonIgnore]
-    public string Full => string.Join(" ", new[] { Prefix, Given, Surname, Suffix }
-        .Where(p => !string.IsNullOrWhiteSpace(p)));
+    public string Full => new[] { Prefix, Given, Surname, Suffix }.JoinNonBlank();
 }
 
 /// <summary>Structured address; maps to GEDCOM ADDR (ADR1/ADR2, CITY, POST, CTRY).</summary>
@@ -30,10 +30,14 @@ public class Address
         && string.IsNullOrWhiteSpace(PostalCode) && string.IsNullOrWhiteSpace(Country);
 
     [JsonIgnore]
-    public string Summary => string.Join(", ", Lines
-        .Concat([string.Join(" ", new[] { PostalCode, City }.Where(x => !string.IsNullOrWhiteSpace(x)))])
-        .Concat([Country ?? ""])
-        .Where(x => !string.IsNullOrWhiteSpace(x)));
+    public string Summary
+    {
+        get
+        {
+            string?[] parts = [.. Lines, new[] { PostalCode, City }.JoinNonBlank(), Country];
+            return parts.JoinNonBlank(", ");
+        }
+    }
 }
 
 /// <summary>Media reference; maps to GEDCOM OBJE/FILE. Path is relative to the data directory.</summary>

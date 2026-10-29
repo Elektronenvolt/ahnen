@@ -5,10 +5,7 @@ import {
   createTreeLayout, generationIdentifier, neighborhood, PLATFORM_WIDTH, PERSON_SCALE, PERSON_LABEL,
   type PersonPosition, type TreeLayout, type PersonRole
 } from './tree3d-layout';
-
-interface DotNetRef {
-  invokeMethodAsync(method: string, ...args: unknown[]): Promise<unknown>;
-}
+import type { DotNetRef } from './shared';
 
 interface DisplayLabels {
   unavailable: string;
@@ -39,7 +36,6 @@ interface Init3dOptions {
   rootId: string | null;
   selectedId: string | null;
   callback: DotNetRef;
-  locale: string;
   labels: DisplayLabels;
 }
 
@@ -72,7 +68,6 @@ let rootId: string | null = null;
 let selectedId: string | null = null;
 let hoveredId: string | null = null;
 let dotnet: DotNetRef | null = null;
-let locale = 'en';
 let labels: DisplayLabels;
 let cardTextures: THREE.CanvasTexture[] = [];
 let personMeshes = new Map<string, THREE.Mesh[]>();
@@ -289,9 +284,7 @@ function addPersonFigure(person: JsonIndi, position: PersonPosition): void {
   label.position.set(PERSON_LABEL.x, 0.015, PERSON_LABEL.z);
   figure.add(label);
 
-  const meshes = [base, body, head];
-  for (const mesh of meshes) mesh.userData.personId = person.id;
-  personMeshes.set(person.id, meshes);
+  personMeshes.set(person.id, [base, body, head]);
   personGroups.set(person.id, figure);
   content.add(figure);
 }
@@ -590,11 +583,11 @@ function onPointerMove(event: PointerEvent): void {
     updateSelection();
   }
   container.style.cursor = id ? 'pointer' : 'grab';
-  if (!id || !data) {
+  if (!id || !layout) {
     tooltip.hidden = true;
     return;
   }
-  const person = data.indis.find(item => item.id === id);
+  const person = layout?.people.get(id);
   if (!person) return;
   const years = lifeYears(person);
   tooltip.textContent = years ? `${personName(person)} · ${years}` : personName(person);
@@ -712,7 +705,6 @@ export function init3d(options: Init3dOptions): void {
   rootId = options.rootId;
   selectedId = options.selectedId;
   dotnet = options.callback;
-  locale = options.locale;
   if (status) status.hidden = true;
 
   try {

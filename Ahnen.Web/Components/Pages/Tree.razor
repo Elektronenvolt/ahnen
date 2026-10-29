@@ -1,5 +1,6 @@
 @page "/"
 @using System.Globalization
+@using Ahnen.Web.Helpers
 @using Ahnen.Web.Models
 @using Ahnen.Web.Services
 @using Microsoft.Extensions.Localization
@@ -9,7 +10,6 @@
 @inject RelationshipService Relationships
 @inject IStringLocalizer<SharedResources> L
 @inject IJSRuntime JS
-@inject NavigationManager Nav
 
 <PageTitle>@L["AppTitle"] – @L["Nav_Tree"]</PageTitle>
 
@@ -21,7 +21,7 @@
                    aria-expanded="@(_searchOpen ? "true" : "false")"
                    aria-activedescendant="@(_searchOpen && _searchIndex >= 0 ? $"tree-person-option-{_searchIndex}" : null)"
                    autocomplete="off" @bind="_searchText" @bind:event="oninput" @bind:after="FilterSearch"
-                   @onfocus="OpenSearch" @onblur="CloseSearch" @onkeydown="SearchKeyDown" />
+                   @onfocus="FilterSearch" @onblur="CloseSearch" @onkeydown="SearchKeyDown" />
             @if (_searchOpen)
             {
                 <ul id="tree-person-list" class="tree-search-results" role="listbox" aria-label="@L["Tree_FindPerson"]">
@@ -330,9 +330,7 @@
         _selected = Store.GetPerson(personId);
         if (_selected is null) return;
         _parents = Store.ParentsOf(personId);
-        _partners = Store.FamiliesAsPartner(personId)
-            .SelectMany(f => f.PartnerIds).Where(id => id != personId).Distinct()
-            .Select(Store.GetPerson).Where(p => p is not null).Cast<Person>().ToList();
+        _partners = Store.PartnersOf(personId);
         _children = Store.ChildrenOf(personId);
         _siblings = _parents
             .SelectMany(p => Store.ChildrenOf(p.Id))
@@ -416,7 +414,6 @@
             rootId = Store.RootPersonId,
             selectedId = _selected?.Id,
             callback = _selfRef,
-            locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
             labels = new
             {
                 unavailable = L["Tree_3dUnavailable"].Value,
@@ -472,8 +469,6 @@
         _searchOpen = true;
     }
 
-    private void OpenSearch() => FilterSearch();
-
     private void CloseSearch()
     {
         _searchOpen = false;
@@ -518,8 +513,7 @@
     private string EventText(IndividualEvent ev)
     {
         var date = GedcomDate.Display(ev.Date, CultureInfo.CurrentUICulture);
-        var parts = new[] { date, ev.Place, ev.Value }.Where(s => !string.IsNullOrWhiteSpace(s));
-        return string.Join(" · ", parts!);
+        return new[] { date, ev.Place, ev.Value }.JoinNonBlank(" · ");
     }
 
     public async ValueTask DisposeAsync()

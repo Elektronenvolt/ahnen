@@ -1,3 +1,4 @@
+using Ahnen.Web.Helpers;
 using Ahnen.Web.Models;
 using SkiaSharp;
 
@@ -71,7 +72,7 @@ public class PhotoService(DataStore store)
     public void Delete(string relativeFile)
     {
         store.EnsureCanEdit();
-        foreach (var file in new[] { relativeFile, ChartDataService.ThumbPath(relativeFile) })
+        foreach (var file in new[] { relativeFile, PhotoPaths.ThumbPath(relativeFile) })
         {
             var full = Path.GetFullPath(Path.Combine(store.DataDirectory, file));
             // stay inside the data directory

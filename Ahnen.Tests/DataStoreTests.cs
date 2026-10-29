@@ -69,7 +69,7 @@ public class DataStoreTests : IDisposable
         var a = Store.AddPerson("Anna", "Alt", Sex.F);
         a.GetOrAddEvent(IndividualEventType.BIRT).Date = "ABT 1950";
         a.Events.Add(new IndividualEvent { Type = IndividualEventType.OCCU, Value = "Bäckerin" });
-        Store.UpdatePerson(a);
+        Store.UpdatePersonFacts(a);
 
         var reloaded = Store.GetPerson(a.Id)!;
         Assert.Equal("ABT 1950", reloaded.Birth?.Date);
@@ -81,11 +81,11 @@ public class DataStoreTests : IDisposable
     {
         var a = Store.AddPerson("A", "X", Sex.M);
         a.Events.Add(new IndividualEvent { Type = IndividualEventType.EVEN }); // EVEN without TYPE
-        Assert.Throws<InvalidOperationException>(() => Store.UpdatePerson(a));
+        Assert.Throws<InvalidOperationException>(() => Store.UpdatePersonFacts(a));
 
         var b = Store.GetPerson(a.Id)!;
         b.Events.Add(new IndividualEvent { Type = IndividualEventType.BIRT, Date = "not a date" });
-        Assert.Throws<InvalidOperationException>(() => Store.UpdatePerson(b));
+        Assert.Throws<InvalidOperationException>(() => Store.UpdatePersonFacts(b));
     }
 
     [Fact]

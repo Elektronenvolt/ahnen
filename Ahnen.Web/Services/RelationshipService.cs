@@ -41,31 +41,67 @@ public class RelationshipService(DataStore store)
 
     private List<(Edge Edge, string To)>? FindPath(string fromId, string toId, int maxDepth)
     {
-        var visited = new HashSet<string> { fromId };
-        var queue = new Queue<(string Id, List<(Edge, string)> Path)>();
-        queue.Enqueue((fromId, []));
+        var graph = BuildGraph(store.Families);
+        var cameFrom = new Dictionary<string, (string From, Edge Edge, int Depth)> { [fromId] = (fromId, Edge.Partner, 0) };
+        var queue = new Queue<string>([fromId]);
         while (queue.Count > 0)
         {
-            var (id, path) = queue.Dequeue();
-            if (path.Count >= maxDepth) continue;
-            foreach (var (edge, next) in Neighbors(id))
+            var id = queue.Dequeue();
+            var depth = cameFrom[id].Depth;
+            if (depth >= maxDepth || !graph.TryGetValue(id, out var neighbors)) continue;
+            foreach (var (edge, next) in neighbors)
             {
-                if (!visited.Add(next)) continue;
-                var nextPath = new List<(Edge, string)>(path) { (edge, next) };
-                if (next == toId) return nextPath;
-                queue.Enqueue((next, nextPath));
+                if (cameFrom.ContainsKey(next)) continue;
+                cameFrom[next] = (id, edge, depth + 1);
+                if (next == toId) return PathTo(cameFrom, fromId, toId);
+                queue.Enqueue(next);
             }
         }
         return null;
     }
 
-    private IEnumerable<(Edge, string)> Neighbors(string id)
+    private static List<(Edge Edge, string To)> PathTo(
+        Dictionary<string, (string From, Edge Edge, int Depth)> cameFrom, string fromId, string toId)
     {
-        foreach (var p in store.ParentsOf(id)) yield return (Edge.Up, p.Id);
-        foreach (var c in store.ChildrenOf(id)) yield return (Edge.Down, c.Id);
-        foreach (var f in store.FamiliesAsPartner(id))
-            foreach (var partner in f.PartnerIds.Where(x => x != id))
-                yield return (Edge.Partner, partner);
+        var path = new List<(Edge, string)>();
+        for (var id = toId; id != fromId; id = cameFrom[id].From)
+            path.Add((cameFrom[id].Edge, id));
+        path.Reverse();
+        return path;
+    }
+
+    /// <summary>Neighbours of every person, parents first, then children, then partners.</summary>
+    private static Dictionary<string, List<(Edge, string)>> BuildGraph(IReadOnlyList<Family> families)
+    {
+        var parents = new Dictionary<string, List<(Edge, string)>>();
+        var children = new Dictionary<string, List<(Edge, string)>>();
+        var partners = new Dictionary<string, List<(Edge, string)>>();
+        static void Add(Dictionary<string, List<(Edge, string)>> map, string from, Edge edge, string to)
+        {
+            if (!map.TryGetValue(from, out var list)) map[from] = list = [];
+            if (!list.Contains((edge, to))) list.Add((edge, to));
+        }
+
+        foreach (var family in families)
+            foreach (var partner in family.PartnerIds)
+            {
+                foreach (var other in family.PartnerIds.Where(x => x != partner))
+                    Add(partners, partner, Edge.Partner, other);
+                foreach (var child in family.ChildRefs.Select(c => c.PersonId))
+                {
+                    Add(children, partner, Edge.Down, child);
+                    Add(parents, child, Edge.Up, partner);
+                }
+            }
+
+        var graph = new Dictionary<string, List<(Edge, string)>>();
+        foreach (var map in new[] { parents, children, partners })
+            foreach (var (id, list) in map)
+            {
+                if (!graph.TryGetValue(id, out var all)) graph[id] = all = [];
+                all.AddRange(list);
+            }
+        return graph;
     }
 
     private RelationshipResult Classify(List<(Edge Edge, string To)> path, string fromId, string toId)

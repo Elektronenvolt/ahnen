@@ -1,3 +1,4 @@
+using Ahnen.Web.Helpers;
 using Ahnen.Web.Services;
 using SkiaSharp;
 
@@ -31,7 +32,7 @@ public class PhotoServiceTests : IDisposable
 
         Assert.StartsWith("photos/", media.File);
         var main = Path.Combine(store.DataDirectory, media.File);
-        var thumb = Path.Combine(store.DataDirectory, ChartDataService.ThumbPath(media.File));
+        var thumb = Path.Combine(store.DataDirectory, PhotoPaths.ThumbPath(media.File));
         Assert.True(File.Exists(main));
         Assert.True(File.Exists(thumb));
 
