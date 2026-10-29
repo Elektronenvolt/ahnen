@@ -5,7 +5,11 @@ using Microsoft.Extensions.Logging;
 namespace Ahnen.Desktop.Services;
 
 /// <summary>User preferences. Never part of the genealogy document.</summary>
-public sealed record Preferences(string? Language = null);
+public sealed record Preferences(string? Language = null,
+    Visualization.TreeChart Chart = Visualization.TreeChart.Hourglass,
+    Visualization.TreeColors Colors = Visualization.TreeColors.Sex,
+    Visualization.TreeOrientation Orientation = Visualization.TreeOrientation.Vertical,
+    int Generations = 4, bool ShowIds = false, bool ShowSex = true);
 
 /// <summary>Reads and writes <see cref="Preferences"/>; problems are logged and never block startup.</summary>
 public sealed class PreferencesService(DesktopPaths paths, ILogger<PreferencesService> logger)

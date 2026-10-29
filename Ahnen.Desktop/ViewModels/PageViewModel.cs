@@ -26,8 +26,5 @@ public abstract class PageViewModel : ObservableObject
     public string Description => _localizer[_descriptionKey];
 }
 
-public sealed class TreePageViewModel(Localizer localizer)
-    : PageViewModel(localizer, "Nav_Tree", "Page_Tree_Placeholder");
-
 public sealed class EditPageViewModel(Localizer localizer)
     : PageViewModel(localizer, "Nav_Edit", "Page_Edit_Placeholder");

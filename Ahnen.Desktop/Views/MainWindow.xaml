@@ -9,6 +9,9 @@
         <DataTemplate DataType="{x:Type vm:PageViewModel}">
             <views:PageView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TreePageViewModel}">
+            <views:TreeView />
+        </DataTemplate>
     </Window.Resources>
     <Window.InputBindings>
         <KeyBinding Key="D1" Modifiers="Ctrl" Command="{Binding SelectPageCommand}" CommandParameter="0" />

@@ -23,6 +23,7 @@ public partial class App : Application
 		services.AddSingleton<ILoggerProvider, ApplicationLogProvider>();
 		services.AddSingleton<PreferencesService>();
 		services.AddSingleton<DocumentSession>();
+		services.AddSingleton<Visualization.TreePhotoCache>();
 		services.AddSingleton<LogViewModel>();
 		services.AddSingleton<TreePageViewModel>();
 		services.AddSingleton<EditPageViewModel>();

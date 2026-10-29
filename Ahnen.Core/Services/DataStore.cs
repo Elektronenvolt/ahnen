@@ -149,6 +149,13 @@ public class DataStore
     public IReadOnlyList<Person> Persons { get { lock (_gate) return Clone(_data.Persons); } }
     public IReadOnlyList<Family> Families { get { lock (_gate) return Clone(_data.Families); } }
     public string? RootPersonId { get { lock (_gate) return _data.RootPersonId; } }
+    public (int People, int Families) Counts { get { lock (_gate) return (_data.Persons.Count, _data.Families.Count); } }
+
+    /// <summary>A coherent detached document for background layout and other read-only projections.</summary>
+    public FamilyTreeData GetSnapshot()
+    {
+        lock (_gate) return Clone(_data);
+    }
 
     public Person? GetPerson(string id)
     {

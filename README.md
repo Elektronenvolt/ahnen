@@ -93,6 +93,26 @@ can replace the supplied files. Existing desktop trees must be moved from
 Language preferences remain in `%LOCALAPPDATA%\Ahnen\settings.json`; `AHNEN_DESKTOP_ROOT`
 overrides only that preferences location, not the tree or application configuration.
 
+The native **Family tree** page displays people and relationships in 2D. Choose hourglass,
+relatives, ancestors or descendants and a generation limit, or **Show all people** for a
+complete overview including separate families and isolated people. Display settings (colors,
+orientation, IDs and sex symbols) are saved with your language preferences.
+
+Click a card or person-list entry to focus it; Shift-click shows details without changing the
+chart. Search by name or ID, then press Enter; the virtualized person list is also a keyboard
+alternative to the canvas. Drag to pan, use the wheel or +/- buttons to zoom, **Fit to view**
+to fit the whole diagram, and the minimap to navigate. Collapse/expand the selected branch
+in a person chart; overview ignores collapsed branches. **Set as root** is the only selection
+action that saves a different root to the document. Generation labels stay relative to that
+root; complex pedigrees can span levels and show a warning without changing recorded links.
+
+Married partner links are solid, ended partnerships dashed, unmarried links dotted and
+non-birth child links purple/dashed. Photos are decoded natively (including WebP) with a
+bounded thumbnail cache. Layout uses cancellable background work and drawing is batched
+with viewport filtering and reduced detail at overview scales. Synthetic layout tests cover
+200, 1,000 and 10,000 people; this is not a guarantee of interactive frame rates on every GPU.
+The editor and the planned new 3D view are **not implemented yet**.
+
 ### Web data storage
 
 All data lives in one folder

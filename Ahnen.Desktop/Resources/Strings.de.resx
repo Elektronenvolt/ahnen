@@ -8,7 +8,17 @@
   <data name="Document_None" xml:space="preserve"><value>Es ist noch kein Stammbaum-Dokument vorhanden. Der Import eines bestehenden Dokuments wird hier angeboten.</value></data>
   <data name="Document_Loaded" xml:space="preserve"><value>{0} Personen, {1} Familien</value></data>
   <data name="Document_Error" xml:space="preserve"><value>Das Stammbaum-Dokument konnte nicht geladen werden: {0}</value></data>
-  <data name="Page_Tree_Placeholder" xml:space="preserve"><value>Die nativen Stammbaum-Ansichten sind noch nicht implementiert.</value></data>
+  <data name="Tree_Help" xml:space="preserve"><value>Klick fokussiert; Umschalt-Klick zeigt nur Details. Ziehen verschiebt; Mausrad oder +/- zoomt; Pos1 passt ein. Klick oder Ziehen auf der Minikarte navigiert. Durchgezogen: verheiratet; gestrichelt: beendete Partnerschaft; gepunktet: unverheiratet; violett gestrichelt: nicht leibliches Kind. G0 ist die Generation der gespeicherten Wurzel.</value></data>
+  <data name="Tree_Loading" xml:space="preserve"><value>Stammbaum wird geladen...</value></data>
+  <data name="Tree_NoPeople" xml:space="preserve"><value>Das Dokument enthält keine Personen.</value></data>
+  <data name="Tree_Visible" xml:space="preserve"><value>{0} von {1} Personen angezeigt</value></data>
+  <data name="Tree_LevelWarning" xml:space="preserve"><value>Einige Beziehungen überspannen Generationsebenen. Alle gespeicherten Verbindungen bleiben erhalten; die Ebenen sind eine Darstellungshilfe, keine exakten Abstammungsabstände.</value></data>
+  <data name="Tree_Error" xml:space="preserve"><value>Die Stammbaum-Aktion ist fehlgeschlagen: {0}</value></data>
+  <data name="Tree_SettingsError" xml:space="preserve"><value>Die Diagrammeinstellungen konnten nicht gespeichert werden. Siehe Protokoll.</value></data>
+  <data name="Tree_ToggleBranch" xml:space="preserve"><value>Gewählten Zweig ein- / ausklappen</value></data>
+  <data name="Tree_ExpandAll" xml:space="preserve"><value>Alle Zweige ausklappen</value></data>
+  <data name="Tree_FocusSelected" xml:space="preserve"><value>Gewählte Person anzeigen</value></data>
+  <data name="Tree_Canvas" xml:space="preserve"><value>Interaktiver 2D-Stammbaum. Personenliste für Tastaturnavigation und Details verwenden.</value></data>
   <data name="Page_Edit_Placeholder" xml:space="preserve"><value>Der native Editor ist noch nicht implementiert.</value></data>
   <data name="Error_Unexpected" xml:space="preserve"><value>Es ist ein unerwarteter Fehler aufgetreten: {0}
 

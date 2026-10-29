@@ -37,11 +37,16 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsEnglish => _localizer.Language == "en";
     public bool IsGerman => _localizer.Language == "de";
 
-    public string StatusText =>
-        _document.LoadError is { } error ? _localizer.Format("Document_Error", error)
-        : _document.HasDocument
-            ? _localizer.Format("Document_Loaded", _document.Store!.Persons.Count, _document.Store.Families.Count)
-            : _localizer["Document_None"];
+    public string StatusText
+    {
+        get
+        {
+            if (_document.LoadError is { } error) return _localizer.Format("Document_Error", error);
+            if (!_document.HasDocument) return _localizer["Document_None"];
+            var counts = _document.Store!.Counts;
+            return _localizer.Format("Document_Loaded", counts.People, counts.Families);
+        }
+    }
 
     [RelayCommand]
     private void SelectPage(string index)
