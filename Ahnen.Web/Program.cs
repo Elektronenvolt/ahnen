@@ -5,11 +5,14 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<ApplicationLogBuffer>();
+builder.Services.AddSingleton<ILoggerProvider, ApplicationLogProvider>();
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-builder.Services.AddSingleton<FamilyTreeStore>();
+builder.Services.AddSingleton<DataStore>();
 builder.Services.AddSingleton<RelationshipService>();
 builder.Services.AddSingleton<ChartDataService>();
 builder.Services.AddSingleton<PhotoService>();
@@ -32,7 +35,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 
 // Serve photos (and only photos) from the data directory.
-var store = app.Services.GetRequiredService<FamilyTreeStore>();
+var store = app.Services.GetRequiredService<DataStore>();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(store.PhotosDirectory),

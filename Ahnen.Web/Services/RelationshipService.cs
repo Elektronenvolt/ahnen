@@ -24,7 +24,7 @@ public record RelationshipResult(RelationshipKind Kind, int Degree = 0, int Remo
 /// Derives the relationship between two persons from the structural links
 /// (partner, parent-child) — brother, nephew, cousin etc. are never stored.
 /// </summary>
-public class RelationshipService(FamilyTreeStore store)
+public class RelationshipService(DataStore store)
 {
     private enum Edge { Up, Down, Partner }
 

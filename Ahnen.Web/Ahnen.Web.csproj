@@ -16,7 +16,8 @@
   <ItemGroup>
     <Content Remove="package.json;package-lock.json;tsconfig.json" />
     <None Include="package.json;tsconfig.json" />
-    <Content Update="seed\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Update="data\familytree.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Update="data\ahnen.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Build the TypeScript tree module when sources change. Requires Node.js.

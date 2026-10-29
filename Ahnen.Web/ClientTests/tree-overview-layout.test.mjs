@@ -74,7 +74,7 @@ function assertEveryoneOnce(layout, input) {
   assert.equal(new Set(layout.cards.map(card => card.id)).size, layout.cards.length, 'card ids are unique');
 }
 
-const sample = toTopola(JSON.parse(readFileSync(new URL('../seed/familytree.json', import.meta.url), 'utf8')));
+const sample = toTopola(JSON.parse(readFileSync(new URL('../data/familytree.json', import.meta.url), 'utf8')));
 
 for (const horizontal of [false, true])
   test(`200-person tree (${horizontal ? 'horizontal' : 'vertical'}): complete, tidy and compact`, () => {

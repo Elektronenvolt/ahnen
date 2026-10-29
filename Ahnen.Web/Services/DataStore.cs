@@ -8,7 +8,7 @@ namespace Ahnen.Web.Services;
 /// backup), provides CRUD and structural relationship operations, validation,
 /// and a one-step undo snapshot. Thread-safe via a single lock (single-user app).
 /// </summary>
-public class FamilyTreeStore
+public class DataStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -17,57 +17,60 @@ public class FamilyTreeStore
     };
 
     private readonly object _gate = new();
-    private readonly string _dataFile;
+    private readonly string? _dataFile;
     private FamilyTreeData _data = new();
     private string? _undoSnapshot;
 
     public string DataDirectory { get; }
     public string PhotosDirectory { get; }
+    public bool CanEdit { get; }
 
     /// <summary>Raised after any mutation is persisted; pages subscribe to refresh.</summary>
     public event Action? Changed;
 
-    public FamilyTreeStore(IConfiguration config, IWebHostEnvironment env)
+    public DataStore(IConfiguration config, IWebHostEnvironment env, ILogger<DataStore> logger)
     {
-        DataDirectory = Environment.GetEnvironmentVariable("FAMILYTREE_DATA_DIR")
-            ?? config["DataDirectory"]
-            ?? Path.Combine(env.ContentRootPath, "data");
-        Directory.CreateDirectory(DataDirectory);
+        DataDirectory = Path.Combine(env.ContentRootPath, "data");
         PhotosDirectory = Path.Combine(DataDirectory, "photos");
         Directory.CreateDirectory(PhotosDirectory);
-        _dataFile = Path.Combine(DataDirectory, "familytree.json");
-        Load(env);
-    }
-
-    private void Load(IWebHostEnvironment env)
-    {
-        if (File.Exists(_dataFile))
+        var fileName = config["DataFileName"];
+        if (string.IsNullOrWhiteSpace(fileName) || fileName is "." or ".." ||
+            fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+            fileName.IndexOfAny(['/', '\\', '<', '>', ':', '"', '|', '?', '*']) >= 0)
         {
-            _data = JsonSerializer.Deserialize<FamilyTreeData>(File.ReadAllText(_dataFile), JsonOptions) ?? new();
+            logger.LogError("DataFileName must be configured as a filename without a path. No data loaded; editing is disabled.");
             return;
         }
-        // First run: copy the seed file if present.
-        var seed = Path.Combine(env.ContentRootPath, "seed", "familytree.json");
-        if (File.Exists(seed))
+
+        _dataFile = Path.Combine(DataDirectory, fileName);
+        try
         {
-            _data = JsonSerializer.Deserialize<FamilyTreeData>(File.ReadAllText(seed), JsonOptions) ?? new();
-            var seedPhotos = Path.Combine(env.ContentRootPath, "seed", "photos");
-            if (Directory.Exists(seedPhotos))
-                foreach (var f in Directory.GetFiles(seedPhotos))
-                    File.Copy(f, Path.Combine(PhotosDirectory, Path.GetFileName(f)), overwrite: false);
+            _data = JsonSerializer.Deserialize<FamilyTreeData>(File.ReadAllText(_dataFile), JsonOptions)
+                ?? throw new JsonException("The data file must contain a family tree object.");
+            CanEdit = true;
         }
-        Save();
+        catch (FileNotFoundException)
+        {
+            logger.LogError("Data file {DataFile} was not found. No data loaded; editing is disabled.", _dataFile);
+        }
+    }
+
+    public void EnsureCanEdit()
+    {
+        if (!CanEdit)
+            throw new InvalidOperationException("No data file is loaded. Editing is disabled; correct DataFileName and restart the application.");
     }
 
     private void Save()
     {
+        EnsureCanEdit();
         GedcomValidator.ValidateLegal(_data); // GEDCOM compliance gate: never persist illegal values
         var json = JsonSerializer.Serialize(_data, JsonOptions);
         var tmp = _dataFile + ".tmp";
         File.WriteAllText(tmp, json);
         if (File.Exists(_dataFile))
             File.Copy(_dataFile, _dataFile + ".bak", overwrite: true);
-        File.Move(tmp, _dataFile, overwrite: true);
+        File.Move(tmp, _dataFile!, overwrite: true);
     }
 
     private void Snapshot() => _undoSnapshot = JsonSerializer.Serialize(_data, JsonOptions);
@@ -77,6 +80,7 @@ public class FamilyTreeStore
     {
         lock (_gate)
         {
+            EnsureCanEdit();
             if (_undoSnapshot is null) return false;
             _data = JsonSerializer.Deserialize<FamilyTreeData>(_undoSnapshot, JsonOptions)!;
             _undoSnapshot = null;
@@ -91,6 +95,7 @@ public class FamilyTreeStore
         T result;
         lock (_gate)
         {
+            EnsureCanEdit();
             Snapshot();
             result = action(_data);
             Save();
@@ -199,6 +204,7 @@ public class FamilyTreeStore
     {
         lock (_gate)
         {
+            EnsureCanEdit();
             var person = _data.Persons.FirstOrDefault(p => p.Id == personId)
                 ?? throw new InvalidOperationException($"Unknown person {personId}");
             var currentJson = JsonSerializer.Serialize(person.Names, JsonOptions);

@@ -21,8 +21,7 @@ RUN dotnet publish Ahnen.Web/Ahnen.Web.csproj -c Release -o /app /p:BuildClientS
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
-ENV ASPNETCORE_URLS=http://+:8080 \
-    FAMILYTREE_DATA_DIR=/data
-VOLUME /data
+ENV ASPNETCORE_URLS=http://+:8080
+VOLUME /app/data
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Ahnen.Web.dll"]

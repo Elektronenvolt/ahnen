@@ -4,6 +4,7 @@ using Ahnen.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Tests;
 
@@ -36,9 +37,9 @@ public class NamePersistenceTests
         Assert.Equal(" Éri ", fromDisk.Persons[0].Names[0].Nickname);
         Assert.Equal("Other", fromDisk.Persons[0].Names[^1].Given);
 
-        var reloaded = new FamilyTreeStore(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataDirectory"] = store.DataDirectory })
-            .Build(), new TestEnvironment(store.DataDirectory));
+        var reloaded = new DataStore(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["DataFileName"] = "familytree.json" })
+            .Build(), new TestEnvironment(fixture.ContentRootPath), NullLogger<DataStore>.Instance);
         Assert.Equal(saved.Names.Select(n => n.Full), reloaded.GetPerson(person.Id)!.Names.Select(n => n.Full));
     }
 
