@@ -1,0 +1,72 @@
+<UserControl x:Class="Ahnen.Desktop.Views.LogsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Ahnen.Desktop.Localization"
+             xmlns:logging="clr-namespace:Microsoft.Extensions.Logging;assembly=Microsoft.Extensions.Logging.Abstractions">
+    <Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}" Header="{loc:Loc Logs_Title}"
+              Background="{StaticResource SurfaceBrush}" Padding="12,4"
+              AutomationProperties.Name="{loc:Loc Logs_Title}">
+        <StackPanel>
+            <TextBlock Text="{loc:Loc Logs_Hint}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"
+                       TextWrapping="Wrap" Margin="0,0,0,4" />
+            <TextBlock Text="{loc:Loc Logs_Empty}" FontSize="13">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <ListBox ItemsSource="{Binding Entries}" MaxHeight="260" BorderThickness="0" FontSize="13"
+                     Background="Transparent" HorizontalContentAlignment="Stretch"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     AutomationProperties.Name="{loc:Loc Logs_Title}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,2">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Margin="0,0,8,0" />
+                                <TextBlock Text="{Binding Level}" FontWeight="Bold" Margin="0,0,8,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static logging:LogLevel.Error}">
+                                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static logging:LogLevel.Critical}">
+                                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static logging:LogLevel.Warning}">
+                                                    <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Category}" Foreground="{StaticResource TextMutedBrush}" />
+                            </StackPanel>
+                            <TextBox Text="{Binding Message, Mode=OneWay}" IsReadOnly="True" BorderThickness="0"
+                                     Background="Transparent" TextWrapping="Wrap" />
+                            <TextBox Text="{Binding Exception, Mode=OneWay}" IsReadOnly="True" BorderThickness="0"
+                                     Background="Transparent" TextWrapping="Wrap">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Exception}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+    </Expander>
+</UserControl>

@@ -154,6 +154,9 @@ dotnet test
 npm --prefix Ahnen.Web test
 ```
 
+`Ahnen.Desktop` and `Ahnen.Desktop.Tests` target `net10.0-windows`, so building the full solution
+requires Windows. On other systems build and test `Ahnen.Web` and `Ahnen.Tests` only.
+
 ## Deployment
 
 ```bash
@@ -242,7 +245,7 @@ table, so exportability cannot silently break.
 ## Architecture
 
 ```
-Ahnen.Core/        shared net10.0 library (no ASP.NET dependency), used by the web host
+Ahnen.Core/        shared net10.0 library (no ASP.NET dependency), used by the web and desktop hosts
 ├── Models/        GEDCOM 7-aligned domain model + GedcomDate parser
 ├── Services/      DataStore (JSON persistence, CRUD, undo, validation; storage location is
 │                  supplied by the host via DataStoreOptions; a failed save rolls back state),
@@ -263,6 +266,34 @@ Ahnen.Web/
 ├── ClientTests/   Node test-runner layout regressions (using the existing esbuild dependency)
 ├── tools/         generate-sample-tree.mjs — deterministic sample data generator
 └── data/          selected JSON tree, supplied test/empty datasets, photos, and backups
+
+Ahnen.Desktop/     native Windows app (WPF, net10.0-windows, MVVM via CommunityToolkit.Mvvm);
+│                  no web view, browser runtime or local server
+├── Views/         XAML windows and controls
+├── ViewModels/    window, page and log view models
+├── Localization/  Localizer + {loc:Loc Key} markup extension (desktop strings, then Core strings)
+├── Services/      per-user paths, preferences, document session
+├── Resources/     desktop-only en/de strings
+└── Themes/        shared styles and palette
+
+Ahnen.Desktop.Tests/  desktop view-model, localization, preferences and document-session tests
 ```
+
+## Windows desktop app (in progress)
+
+A native WPF application is being added next to the web app. It reuses `Ahnen.Core` and keeps its
+data separate from the web app. The current state is a shell only: navigation, English/German
+language switching, a live log viewer and a status line. The tree views, editor, document import
+and installer are not implemented yet.
+
+```bash
+# Windows only
+dotnet run --project Ahnen.Desktop
+```
+
+- Data lives in `%LOCALAPPDATA%\Ahnen\data` (the JSON document `familytree.json` plus `photos/`);
+  preferences are in `%LOCALAPPDATA%\Ahnen\settings.json`. Set `AHNEN_DESKTOP_ROOT` to use another folder.
+- A missing document is not created or seeded; the app starts read-only. The web app's data is never
+  opened or modified.
 
 All licenses are free: Apache-2.0 (Topola), ISC/BSD (d3), MIT (Three.js, esbuild, SkiaSharp, .NET).

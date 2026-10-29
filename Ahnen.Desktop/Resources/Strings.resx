@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav_Label" xml:space="preserve"><value>Main navigation</value></data>
+  <data name="Document_None" xml:space="preserve"><value>No family tree document is available yet. Importing an existing document will be offered here.</value></data>
+  <data name="Document_Loaded" xml:space="preserve"><value>{0} people, {1} families</value></data>
+  <data name="Document_Error" xml:space="preserve"><value>The family tree document could not be loaded: {0}</value></data>
+  <data name="Page_Tree_Placeholder" xml:space="preserve"><value>The native family tree views are not implemented yet.</value></data>
+  <data name="Page_Edit_Placeholder" xml:space="preserve"><value>The native editor is not implemented yet.</value></data>
+  <data name="Error_Unexpected" xml:space="preserve"><value>An unexpected error occurred: {0}
+
+Details are available in the logs.</value></data>
+</root>
