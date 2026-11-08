@@ -439,7 +439,58 @@
         }
       ],
       "sex": "F",
-      "events": [],
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "1 AUG 1857",
+          "place": "Schwarbach 33"
+        },
+        {
+          "type": "OCCU",
+          "value": "Dienstmagd Zuggers 33 (Georg Stoifl)",
+          "date": null,
+          "place": null
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "26 MAY 1947",
+          "place": "Haid"
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [
+        "Aufnahme 168 - CZ Geburtsbuch"
+      ],
+      "media": []
+    },
+    {
+      "id": "I13",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Johann",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "4 JUN 1878",
+          "place": null
+        }
+      ],
       "address": {
         "lines": [],
         "city": null,
@@ -447,6 +498,424 @@
         "country": null
       },
       "notes": [],
+      "media": []
+    },
+    {
+      "id": "I14",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Ludwig",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "17 AUG 1881",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "17 AUG 1881",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I15",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Juliana",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "F",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "19 MAY 1883",
+          "place": "Zuggers 35"
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I16",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Stefanie",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "F",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "26 DEC 1884",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "3 JAN 1885",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I17",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Franz",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "2 DEC 1885",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "2 JAN 1886",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I18",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Elisabeth",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "F",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "18 NOV 1886",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "4 FEB 1887",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I19",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Maria",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "F",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "23 JAN 1888",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "11 JUL 1919",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I20",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Willibald",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "21 JUN 1819",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I21",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Alois",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "16 JUN 1893",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "1961",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I22",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Fanz",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "19 SEP 1895",
+          "place": "Zuggers 35"
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I23",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Rosa",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "F",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "26 AUG 1897",
+          "place": "Zuggers 35"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "11 MAR 1898",
+          "place": null
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [],
+      "media": []
+    },
+    {
+      "id": "I24",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Roman",
+          "surname": "Stoifl",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "M",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "18 FEB 1899",
+          "place": "Zuggers 41"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "19 FEB 1946",
+          "place": "Haid 90"
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [
+        "Mein Urgro\u00DFvater"
+      ],
+      "media": []
+    },
+    {
+      "id": "I25",
+      "names": [
+        {
+          "type": "BIRTH",
+          "given": "Johanna",
+          "surname": "Kotrba",
+          "prefix": null,
+          "suffix": null,
+          "nickname": null
+        }
+      ],
+      "sex": "F",
+      "events": [
+        {
+          "type": "BIRT",
+          "value": null,
+          "date": "30 APR 1897",
+          "place": "Gundschachen 16"
+        },
+        {
+          "type": "DEAT",
+          "value": null,
+          "date": "31 JUL 1976",
+          "place": "Wien"
+        }
+      ],
+      "address": {
+        "lines": [],
+        "city": null,
+        "postalCode": null,
+        "country": null
+      },
+      "notes": [
+        "Aufnahme 280 - CZ Geburtsbuch (Rapsach - Rottenschachen)"
+      ],
       "media": []
     }
   ],
@@ -567,6 +1036,71 @@
           "type": "MARR",
           "typeDetail": null,
           "date": "13 JUL 1880",
+          "place": "Zuggers"
+        }
+      ],
+      "childRefs": [
+        {
+          "personId": "I13",
+          "pedigree": "OTHER"
+        },
+        {
+          "personId": "I14",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I15",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I16",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I17",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I18",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I19",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I20",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I21",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I22",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I23",
+          "pedigree": "BIRTH"
+        },
+        {
+          "personId": "I24",
+          "pedigree": "BIRTH"
+        }
+      ]
+    },
+    {
+      "id": "F7",
+      "partnerIds": [
+        "I24",
+        "I25"
+      ],
+      "events": [
+        {
+          "type": "MARR",
+          "typeDetail": null,
+          "date": "24 MAY 1924",
           "place": "Zuggers"
         }
       ],
