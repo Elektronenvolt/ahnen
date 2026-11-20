@@ -16,7 +16,7 @@ public static partial class GedcomDate
     [GeneratedRegex(@"^(?:(?<q>ABT|BEF|AFT)\s+)?(?:(?:(?<d>\d{1,2})\s+)?(?<m>[A-Z]{3})\s+)?(?<y>\d{1,4})$")]
     private static partial Regex CanonicalRegex();
 
-    [GeneratedRegex(@"^(~|about|abt\.?|ca\.?|circa|<|before|bef\.?|vor|>|after|aft\.?|nach)\s*", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(~|about|abt\.?|ca\.?|circa|um|<|before|bef\.?|vor|>|after|aft\.?|nach)\s*", RegexOptions.IgnoreCase)]
     private static partial Regex QualifierRegex();
 
     [GeneratedRegex(@"^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$")]
@@ -62,7 +62,7 @@ public static partial class GedcomDate
             var q = qm.Groups[1].Value.ToLowerInvariant().TrimEnd('.');
             qualifier = q switch
             {
-                "~" or "about" or "abt" or "ca" or "circa" => "ABT ",
+                "~" or "about" or "abt" or "ca" or "circa" or "um" => "ABT ",
                 "<" or "before" or "bef" or "vor" => "BEF ",
                 _ => "AFT "
             };
@@ -98,7 +98,8 @@ public static partial class GedcomDate
 
     private static string? Build(string qualifier, string day, string month, string year)
     {
-        if (!int.TryParse(year, out var y) || y is < 1 or > 9999) return null;
+        // Canonical validation already accepts year zero, so existing dates must round-trip.
+        if (!int.TryParse(year, out var y) || y is < 0 or > 9999) return null;
         if (!int.TryParse(month, out var mo) || mo is < 1 or > 12) return null;
         if (string.IsNullOrEmpty(day)) return $"{qualifier}{Months[mo - 1]} {y}";
         if (!int.TryParse(day, out var d) || d is < 1 or > 31) return null;
@@ -127,7 +128,7 @@ public static partial class GedcomDate
         catch { return null; }
     }
 
-    /// <summary>Formats a canonical GEDCOM date for display in the given culture.</summary>
+    /// <summary>Formats a canonical GEDCOM date numerically with a localized qualifier.</summary>
     public static string Display(string? canonical, CultureInfo culture)
     {
         if (string.IsNullOrWhiteSpace(canonical)) return "";
@@ -142,15 +143,15 @@ public static partial class GedcomDate
             "AFT" => german ? "nach " : "after ",
             _ => ""
         };
-        var y = m.Groups["y"].Value;
+        var y = int.Parse(m.Groups["y"].Value).ToString("D4", CultureInfo.InvariantCulture);
         if (!m.Groups["m"].Success) return prefix + y;
 
         var monthIndex = Array.IndexOf(Months, m.Groups["m"].Value);
         if (monthIndex < 0) return canonical;
-        var monthName = culture.DateTimeFormat.GetAbbreviatedMonthName(monthIndex + 1);
-        if (!m.Groups["d"].Success) return $"{prefix}{monthName} {y}";
+        var month = (monthIndex + 1).ToString("D2", CultureInfo.InvariantCulture);
+        if (!m.Groups["d"].Success) return $"{prefix}{month}.{y}";
 
-        var d = int.Parse(m.Groups["d"].Value);
-        return german ? $"{prefix}{d}. {monthName} {y}" : $"{prefix}{monthName} {d}, {y}";
+        var day = int.Parse(m.Groups["d"].Value).ToString("D2", CultureInfo.InvariantCulture);
+        return $"{prefix}{day}.{month}.{y}";
     }
 }

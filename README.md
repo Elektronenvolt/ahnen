@@ -57,6 +57,10 @@ and Three.js (MIT).
 - **Languages:** English and German (switcher in the header). Data is always stored untranslated in
   canonical GEDCOM form.
 
+Dates are displayed as `DD.MM.YYYY`, `MM.YYYY` when the day is unknown, or `YYYY` when only the year
+is known. Date fields also accept qualifiers such as `about`, `before`, and `after` (German: `um`,
+`vor`, and `nach`), as well as previously supported input formats such as ISO and GEDCOM dates.
+
 ## Running locally
 
 Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node.js](https://nodejs.org)

@@ -1,5 +1,7 @@
 using Ahnen.Core.Models;
 using Ahnen.Core.Services;
+using System.Globalization;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Ahnen.Core.Tests;
 
@@ -125,6 +127,24 @@ public class DataStoreTests : IDisposable
         var reloaded = Store.GetPerson(a.Id)!;
         Assert.Equal("ABT 1950", reloaded.Birth?.Date);
         Assert.Equal("Bäckerin", reloaded.Occupation);
+    }
+
+    [Theory]
+    [InlineData("05.04.1950", "5 APR 1950")]
+    [InlineData("um 04.1950", "ABT APR 1950")]
+    [InlineData("vor 1950", "BEF 1950")]
+    public void Numeric_date_input_persists_as_canonical_gedcom(string input, string canonical)
+    {
+        var person = Store.AddPerson("Anna", "Alt", Sex.F);
+        person.GetOrAddEvent(IndividualEventType.BIRT).Date = GedcomDate.Normalize(input);
+        Store.UpdatePersonFacts(person);
+
+        var reloaded = new DataStore(
+            new DataStoreOptions(Path.Combine(_ts.ContentRootPath, "data"), "familytree.json"),
+            NullLogger<DataStore>.Instance);
+        var date = reloaded.GetPerson(person.Id)!.Birth!.Date;
+        Assert.Equal(canonical, date);
+        Assert.Equal(canonical, GedcomDate.Normalize(GedcomDate.Display(date, CultureInfo.GetCultureInfo("de-DE"))));
     }
 
     [Fact]

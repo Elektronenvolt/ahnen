@@ -120,6 +120,40 @@ public class ChartDataServiceTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData("en-US", "about 05.04.1950", "before 04.1980")]
+    [InlineData("de-DE", "um 05.04.1950", "vor 04.1980")]
+    public void Full_and_partial_dates_are_mapped_numerically(string language, string birthDate, string marriageDate)
+    {
+        var person = Store.AddPerson("Anna", "Alt", Sex.F);
+        var partner = Store.AddPerson("Bob", "Alt", Sex.M);
+        person.GetOrAddEvent(IndividualEventType.BIRT).Date = "ABT 5 APR 1950";
+        person.GetOrAddEvent(IndividualEventType.DEAT).Date = "2001";
+        Store.UpdatePersonFacts(person);
+        var family = Store.AddPartner(person.Id, partner.Id);
+        FamilyStatus.ApplyStatus(family, "MARR");
+        family.Marriage!.Date = "BEF APR 1980";
+        Store.UpdateFamily(family);
+
+        var previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(language);
+        try
+        {
+            var data = Build();
+            var indi = data.Indis.Single(i => i.Id == person.Id);
+            var fam = data.Fams.Single(f => f.Id == family.Id);
+            Assert.Equal(birthDate, indi.Birth!.Date!.Text);
+            Assert.Equal("2001", indi.Death!.Date!.Text);
+            Assert.Equal(1950, indi.BirthYear);
+            Assert.Equal(marriageDate, fam.Marriage!.Date!.Text);
+            Assert.Equal(1980, fam.MarriageYear);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
     [Fact]
     public void Missing_events_are_null_and_name_parts_are_split()
     {
