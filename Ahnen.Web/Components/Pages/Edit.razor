@@ -79,15 +79,10 @@
                     <div class="form-grid">
                         <label>@L["Field_Birth"] – @L["Field_Date"]
                             <input class="input @(_birthDateError ? "invalid" : "")" @bind="_birthDate"
-                                   @bind:after="ScheduleSave"
-                                   placeholder="@L["Hint_Date"]"/>
+                                   @bind:after="ScheduleBirthDateSave"/>
                             @if (_birthDateError)
                             {
                                 <span class="field-error">@L["Validation_BadDate"]</span>
-                            }
-                            else if (NormalizedPreview(_birthDate) is { Length: > 0 } bp)
-                            {
-                                <span class="field-preview">@bp</span>
                             }
                         </label>
                         <label>@L["Field_Birth"] – @L["Field_Place"]
@@ -95,8 +90,7 @@
                         </label>
                         <label>@L["Field_Death"] – @L["Field_Date"]
                             <input class="input @(_deathDateError ? "invalid" : "")" @bind="_deathDate"
-                                   @bind:after="ScheduleSave"
-                                   placeholder="@L["Hint_Date"]"/>
+                                   @bind:after="ScheduleDeathDateSave"/>
                             @if (_deathDateError)
                             {
                                 <span class="field-error">@L["Validation_BadDate"]</span>
@@ -232,9 +226,13 @@
                                     @if (FamilyStatus.GetStatus(fam) is not "NONE" and not "ENGA")
                                     {
                                         <label>@L["Field_MarriageDate"]
-                                            <input class="input" value="@fam.Marriage?.Date"
-                                                   @onchange="e => SetMarriageDate(fam.Id, e.Value!.ToString())"
-                                                   placeholder="@L["Hint_Date"]"/>
+                                            <input class="input @(_marriageDateErrors.ContainsKey(fam.Id) ? "invalid" : "")"
+                                                   @bind:get="MarriageDateInput(fam)"
+                                                   @bind:set="input => SetMarriageDate(fam.Id, input)"/>
+                                            @if (_marriageDateErrors.ContainsKey(fam.Id))
+                                            {
+                                                <span class="field-error">@L["Validation_BadDate"]</span>
+                                            }
                                         </label>
                                         <label>@L["Field_MarriagePlace"]
                                             <input class="input" value="@fam.Marriage?.Place"
@@ -353,6 +351,7 @@
     private string _birthDate = "", _birthPlace = "", _deathDate = "", _deathPlace = "";
     private string _occupation = "", _notes = "", _addressLine = "";
     private bool _birthDateError, _deathDateError, _lifeSpanError;
+    private readonly Dictionary<string, string> _marriageDateErrors = [];
     private string? _photoError;
 
     private Timer? _saveTimer;
@@ -395,11 +394,12 @@
         FlushSave();
         var person = Store.GetPerson(personId);
         if (person is null) return;
+        if (_personId != personId) _marriageDateErrors.Clear();
         _personId = personId;
         _person = person;
-        _birthDate = person.Birth?.Date ?? "";
+        _birthDate = GedcomDate.Display(person.Birth?.Date, CultureInfo.CurrentUICulture);
         _birthPlace = person.Birth?.Place ?? "";
-        _deathDate = person.Death?.Date ?? "";
+        _deathDate = GedcomDate.Display(person.Death?.Date, CultureInfo.CurrentUICulture);
         _deathPlace = person.Death?.Place ?? "";
         _occupation = person.Occupation ?? "";
         _notes = string.Join("\n", person.Notes);
@@ -424,6 +424,18 @@
     {
         _saveTimer?.Dispose();
         _saveTimer = new Timer(_ => InvokeAsync(SaveNow), null, 500, Timeout.Infinite);
+    }
+
+    private void ScheduleBirthDateSave()
+    {
+        _birthDate = FormatDateInput(_birthDate);
+        ScheduleSave();
+    }
+
+    private void ScheduleDeathDateSave()
+    {
+        _deathDate = FormatDateInput(_deathDate);
+        ScheduleSave();
     }
 
     private void FlushSave()
@@ -496,13 +508,10 @@
 
     private static string? Trim(string s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
-    private string NormalizedPreview(string input)
+    private static string FormatDateInput(string input)
     {
-        if (string.IsNullOrWhiteSpace(input)) return "";
         var normalized = GedcomDate.Normalize(input);
-        return normalized is null || normalized == input.Trim().ToUpperInvariant()
-            ? ""
-            : $"→ {GedcomDate.Display(normalized, CultureInfo.CurrentUICulture)} ({normalized})";
+        return normalized is null ? input : GedcomDate.Display(normalized, CultureInfo.CurrentUICulture);
     }
 
     // ---- photo -----------------------------------------------------------
@@ -624,10 +633,20 @@
         ShowToast(L["Toast_Saved"]);
     }
 
+    private string MarriageDateInput(Family family) =>
+        _marriageDateErrors.TryGetValue(family.Id, out var input)
+            ? input
+            : GedcomDate.Display(family.Marriage?.Date, CultureInfo.CurrentUICulture);
+
     private void SetMarriageDate(string familyId, string? input)
     {
         var normalized = GedcomDate.Normalize(input);
-        if (input is { Length: > 0 } && normalized is null) return;
+        if (!string.IsNullOrWhiteSpace(input) && normalized is null)
+        {
+            _marriageDateErrors[familyId] = input;
+            return;
+        }
+        _marriageDateErrors.Remove(familyId);
         UpdateMarriage(familyId, marriage => marriage.Date = normalized);
     }
 

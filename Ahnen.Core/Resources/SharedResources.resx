@@ -79,7 +79,6 @@
   <data name="Toast_Deleted" xml:space="preserve"><value>Deleted</value></data>
   <data name="Confirm_Delete" xml:space="preserve"><value>Delete {0}? This removes {1} relationship link(s).</value></data>
   <data name="Picker_New" xml:space="preserve"><value>Create new person</value></data>
-  <data name="Hint_Date" xml:space="preserve"><value>e.g. 1950, 04/1950, 12.04.1950, ~1950, before 1950</value></data>
   <data name="Hint_Siblings" xml:space="preserve"><value>Siblings are derived automatically from shared parents.</value></data>
   <data name="Validation_BadDate" xml:space="preserve"><value>Could not understand this date.</value></data>
   <data name="Validation_BirthAfterDeath" xml:space="preserve"><value>Birth is after death.</value></data>
