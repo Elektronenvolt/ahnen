@@ -47,7 +47,7 @@ public class MediaRef
     public string? Title { get; set; }
 }
 
-/// <summary>An individual event; maps to GEDCOM event tags with DATE/PLAC.</summary>
+/// <summary>An individual event; maps to GEDCOM event tags with DATE, PLAC, and event attributes.</summary>
 public class IndividualEvent
 {
     public IndividualEventType Type { get; set; }
@@ -56,6 +56,8 @@ public class IndividualEvent
     /// <summary>Canonical GEDCOM date string (see <see cref="GedcomDate"/>).</summary>
     public string? Date { get; set; }
     public string? Place { get; set; }
+    /// <summary>GEDCOM CAUS text, used for a death's cause of death.</summary>
+    public string? Cause { get; set; }
     public List<string> Notes { get; set; } = [];
 }
 

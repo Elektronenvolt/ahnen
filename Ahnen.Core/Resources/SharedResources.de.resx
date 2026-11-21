@@ -58,6 +58,7 @@
   <data name="Field_Death" xml:space="preserve"><value>Tod</value></data>
   <data name="Field_Date" xml:space="preserve"><value>Datum</value></data>
   <data name="Field_Place" xml:space="preserve"><value>Ort</value></data>
+  <data name="Field_CauseOfDeath" xml:space="preserve"><value>Todesursache</value></data>
   <data name="Field_Occupation" xml:space="preserve"><value>Beruf</value></data>
   <data name="Field_Notes" xml:space="preserve"><value>Allgemeine Notizen</value></data>
   <data name="Field_AddressLines" xml:space="preserve"><value>Straße / Adresszeile</value></data>

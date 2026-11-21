@@ -233,6 +233,7 @@ GEDCOM link types (partner, parent-child) are, and everything else is derived at
 | `persons[].events[].value` | event payload / `EVEN.TYPE` text |
 | `persons[].events[].date` | `DATE` (canonical GEDCOM date incl. `ABT`/`BEF`/`AFT`) |
 | `persons[].events[].place` | `PLAC` |
+| `persons[].events[].cause` | `CAUS` (e.g. `DEAT.CAUS`) |
 | `persons[].events[].notes[]` | event `NOTE` |
 | `persons[].address.lines` | `ADDR` / `ADR1`, `ADR2` |
 | `persons[].address.city` | `CITY` |

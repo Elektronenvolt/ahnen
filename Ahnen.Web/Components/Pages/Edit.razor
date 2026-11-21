@@ -106,6 +106,9 @@
                         <label>@L["Field_Death"] – @L["Field_Place"]
                             <input class="input" @bind="_deathPlace" @bind:after="ScheduleSave"/>
                         </label>
+                        <label>@L["Field_CauseOfDeath"]
+                            <input class="input" @bind="_deathCause" @bind:after="ScheduleSave"/>
+                        </label>
                         <label>@L["Field_DeathNotes"]
                             <textarea class="input event-notes-input" rows="1" @bind="_deathNotes" @bind:after="ScheduleSave"></textarea>
                         </label>
@@ -359,7 +362,8 @@
     }
 
     // Editable mirrors of event-backed fields
-    private string _birthDate = "", _birthPlace = "", _birthNotes = "", _deathDate = "", _deathPlace = "", _deathNotes = "";
+    private string _birthDate = "", _birthPlace = "", _birthNotes = "", _deathDate = "", _deathPlace = "";
+    private string _deathCause = "", _deathNotes = "";
     private string _occupation = "", _notes = "", _addressLine = "";
     private bool _birthDateError, _deathDateError, _lifeSpanError;
     private readonly Dictionary<string, string> _marriageDateErrors = [];
@@ -413,6 +417,7 @@
         _birthNotes = string.Join("\n", person.Birth?.Notes ?? []);
         _deathDate = GedcomDate.Display(person.Death?.Date, CultureInfo.CurrentUICulture);
         _deathPlace = person.Death?.Place ?? "";
+        _deathCause = person.Death?.Cause ?? "";
         _deathNotes = string.Join("\n", person.Death?.Notes ?? []);
         _occupation = person.Occupation ?? "";
         _notes = string.Join("\n", person.Notes);
@@ -483,7 +488,8 @@
         }
 
         ApplyEvent(IndividualEventType.BIRT, birth, Trim(_birthPlace), null, SplitNotes(_birthNotes));
-        ApplyEvent(IndividualEventType.DEAT, death, Trim(_deathPlace), null, SplitNotes(_deathNotes));
+        ApplyEvent(IndividualEventType.DEAT, death, Trim(_deathPlace), null, SplitNotes(_deathNotes),
+            cause: Trim(_deathCause));
         ApplyEvent(IndividualEventType.OCCU, null, null, Trim(_occupation));
         _person.Notes = SplitNotes(_notes);
         _person.Address.Lines = _addressLine.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
@@ -493,11 +499,13 @@
         ShowToast(L["Toast_Saved"]);
     }
 
-    private void ApplyEvent(IndividualEventType type, string? date, string? place, string? value, List<string>? notes = null)
+    private void ApplyEvent(IndividualEventType type, string? date, string? place, string? value, List<string>? notes = null,
+        string? cause = null)
     {
         if (_person is null) return;
         var ev = _person.Events.FirstOrDefault(e => e.Type == type);
-        var hasContent = date is not null || place is not null || value is not null || (notes ?? ev?.Notes)?.Count > 0;
+        var hasContent = date is not null || place is not null || value is not null || cause is not null ||
+                         (notes ?? ev?.Notes)?.Count > 0;
         if (!hasContent)
         {
             if (ev is not null) _person.Events.Remove(ev);
@@ -508,6 +516,7 @@
         ev.Date = date;
         ev.Place = place;
         ev.Value = value;
+        if (type == IndividualEventType.DEAT) ev.Cause = cause;
         if (notes is not null) ev.Notes = notes;
     }
 

@@ -173,6 +173,10 @@
                         {
                             <DetailRow Label="@L["Detail_Died"]" Value="@EventText(death)" />
                         }
+                        @if (_selected.Death?.Cause is { Length: > 0 } cause)
+                        {
+                            <DetailRow Label="@L["Field_CauseOfDeath"]" Value="@cause" />
+                        }
                         @if (_selected.Death is { } deathEvent && deathEvent.Notes.Any(n => n.Length > 0))
                         {
                             <DetailRow Label="@L["Field_DeathNotes"]" Value="@NotesText(deathEvent.Notes)" />
