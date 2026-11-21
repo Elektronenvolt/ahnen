@@ -29,7 +29,11 @@
   <data name="Detail_Died" xml:space="preserve"><value>Gestorben</value></data>
   <data name="Detail_Occupation" xml:space="preserve"><value>Beruf</value></data>
   <data name="Detail_Address" xml:space="preserve"><value>Adresse</value></data>
-  <data name="Detail_Notes" xml:space="preserve"><value>Notizen</value></data>
+  <data name="Detail_Notes" xml:space="preserve"><value>Allgemeine Notizen</value></data>
+  <data name="Field_BirthNotes" xml:space="preserve"><value>Notizen zur Geburt</value></data>
+  <data name="Field_DeathNotes" xml:space="preserve"><value>Notizen zum Tod</value></data>
+  <data name="Field_MarriageNotes" xml:space="preserve"><value>Notizen zur Hochzeit</value></data>
+  <data name="Detail_MarriageNotesWithPartner" xml:space="preserve"><value>Notizen zur Hochzeit mit {0}</value></data>
   <data name="Detail_Parents" xml:space="preserve"><value>Eltern</value></data>
   <data name="Detail_Partners" xml:space="preserve"><value>Partner</value></data>
   <data name="Detail_Children" xml:space="preserve"><value>Kinder</value></data>
@@ -55,7 +59,7 @@
   <data name="Field_Date" xml:space="preserve"><value>Datum</value></data>
   <data name="Field_Place" xml:space="preserve"><value>Ort</value></data>
   <data name="Field_Occupation" xml:space="preserve"><value>Beruf</value></data>
-  <data name="Field_Notes" xml:space="preserve"><value>Notizen</value></data>
+  <data name="Field_Notes" xml:space="preserve"><value>Allgemeine Notizen</value></data>
   <data name="Field_AddressLines" xml:space="preserve"><value>Straße / Adresszeile</value></data>
   <data name="Field_City" xml:space="preserve"><value>Stadt</value></data>
   <data name="Field_PostalCode" xml:space="preserve"><value>PLZ</value></data>

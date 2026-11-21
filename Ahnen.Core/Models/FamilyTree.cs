@@ -56,6 +56,7 @@ public class IndividualEvent
     /// <summary>Canonical GEDCOM date string (see <see cref="GedcomDate"/>).</summary>
     public string? Date { get; set; }
     public string? Place { get; set; }
+    public List<string> Notes { get; set; } = [];
 }
 
 /// <summary>A family event; maps to GEDCOM family event tags with DATE/PLAC.</summary>
@@ -66,6 +67,7 @@ public class FamilyEvent
     public string? TypeDetail { get; set; }
     public string? Date { get; set; }
     public string? Place { get; set; }
+    public List<string> Notes { get; set; } = [];
 }
 
 /// <summary>Child link inside a family; exports as CHIL + INDI.FAMC.PEDI.</summary>
