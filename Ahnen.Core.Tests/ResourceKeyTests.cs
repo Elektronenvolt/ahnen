@@ -19,4 +19,12 @@ public class ResourceKeyTests
             Assert.False(string.IsNullOrEmpty(Resources.GetString($"Fam_{option}", CultureInfo.GetCultureInfo(culture))),
                 $"Missing resource Fam_{option} ({culture})");
     }
+
+    [Theory]
+    [InlineData("en", "Cause of death")]
+    [InlineData("de", "Todesursache")]
+    public void Cause_of_death_label_is_localized(string culture, string expected)
+    {
+        Assert.Equal(expected, Resources.GetString("Field_CauseOfDeath", CultureInfo.GetCultureInfo(culture)));
+    }
 }

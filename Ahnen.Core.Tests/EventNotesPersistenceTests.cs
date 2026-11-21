@@ -16,7 +16,7 @@ public class EventNotesPersistenceTests : IDisposable
     public void Legacy_events_without_notes_load_with_empty_collections_without_rewriting()
     {
         const string legacy = """
-            {"persons":[{"id":"I1","notes":["Common"],"events":[{"type":0,"date":"1950"}]}],
+            {"persons":[{"id":"I1","notes":["Common"],"events":[{"type":"DEAT","date":"1950"}]}],
              "families":[{"id":"F1","partnerIds":["I1"],"events":[{"type":0,"date":"1970"}]}]}
             """;
         File.WriteAllText(Path.Combine(DataDirectory, "familytree.json"), legacy);
@@ -24,7 +24,8 @@ public class EventNotesPersistenceTests : IDisposable
 
         Assert.Equal(legacy, File.ReadAllText(Path.Combine(DataDirectory, "familytree.json")));
         Assert.Equal(["Common"], store.GetPerson("I1")!.Notes);
-        Assert.Empty(Assert.Single(store.GetPerson("I1")!.Events).Notes);
+        Assert.Empty(store.GetPerson("I1")!.Death!.Notes);
+        Assert.Null(store.GetPerson("I1")!.Death!.Cause);
         Assert.Empty(Assert.Single(store.GetFamily("F1")!.Events).Notes);
     }
 
@@ -39,7 +40,9 @@ public class EventNotesPersistenceTests : IDisposable
         person = Store.GetPerson(person.Id)!;
         person.Notes = ["Common"];
         person.GetOrAddEvent(IndividualEventType.BIRT).Notes = ["Birth one", "Birth two"];
-        person.GetOrAddEvent(IndividualEventType.DEAT).Notes = ["Death"];
+        var death = person.GetOrAddEvent(IndividualEventType.DEAT);
+        death.Cause = "Natural causes";
+        death.Notes = ["Death"];
         Store.UpdatePersonFacts(person);
         FamilyStatus.ApplyStatus(first, "MARR");
         first.Marriage!.Notes = ["First marriage"];
@@ -53,6 +56,7 @@ public class EventNotesPersistenceTests : IDisposable
         Assert.Equal(["Common"], saved.Notes);
         Assert.Equal(["Birth one", "Birth two"], saved.Birth!.Notes);
         Assert.Equal(["Death"], saved.Death!.Notes);
+        Assert.Equal("Natural causes", saved.Death.Cause);
         Assert.True(saved.IsDeceased);
         Assert.Equal(["First marriage"], reloaded.FamiliesAsPartner(firstPartner.Id).Single().Marriage!.Notes);
         Assert.Equal(["Second marriage"], reloaded.FamiliesAsPartner(secondPartner.Id).Single().Marriage!.Notes);

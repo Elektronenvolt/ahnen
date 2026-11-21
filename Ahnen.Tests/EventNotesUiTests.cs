@@ -54,12 +54,14 @@ public class EventNotesUiTests
             Assert.Contains("Common notes", html);
             Assert.Contains("Birth notes", html);
             Assert.Contains("Death notes", html);
+            Assert.Contains("Cause of death", html);
             Assert.Equal(2, html.Split("Marriage notes").Length - 1);
             Assert.Equal(4, html.Split("class=\"input event-notes-input\" rows=\"1\"").Length - 1);
             Assert.Contains("class=\"input postal-code-input\" maxlength=\"5\" inputmode=\"numeric\"", html);
 
             SetField(edit, "_notes", " Common ");
             SetField(edit, "_birthNotes", " Birth one \n\nBirth two ");
+            SetField(edit, "_deathCause", "Natural causes");
             SetField(edit, "_deathNotes", "<death>");
             Invoke(edit, "SaveNow");
             Invoke(edit, "SetMarriageNotes", first.Id, " First note \n First second line ");
@@ -69,6 +71,7 @@ public class EventNotesUiTests
             Assert.Equal(["Common"], saved.Notes);
             Assert.Equal(["Birth one", "Birth two"], saved.Birth!.Notes);
             Assert.Equal(["<death>"], saved.Death!.Notes);
+            Assert.Equal("Natural causes", saved.Death.Cause);
             Assert.True(saved.IsDeceased);
             Assert.Equal(["Existing occupation note"], saved.Events.Single(e => e.Type == IndividualEventType.OCCU).Notes);
             Assert.Equal(["First note", "First second line"], store.GetFamily(first.Id)!.Marriage!.Notes);
@@ -80,6 +83,8 @@ public class EventNotesUiTests
             Assert.Contains("Birth one", detail);
             Assert.Contains("Death notes", detail);
             Assert.Contains("&lt;death&gt;", detail);
+            Assert.Contains("Cause of death", detail);
+            Assert.Contains("Natural causes", detail);
             Assert.Contains("Common notes", detail);
             Assert.Contains("Marriage notes with Pat First", detail);
             Assert.Contains("Marriage notes with Sam Second", detail);
@@ -99,6 +104,7 @@ public class EventNotesUiTests
             Invoke(edit, "Select", person.Id);
             Invoke(edit, "StateHasChanged");
             Assert.Contains("rows=\"1\">Birth one", editor.ToHtmlString());
+            Assert.Equal("Natural causes", GetField(edit, "_deathCause"));
             SetField(edit, "_birthDate", "not a date");
             SetField(edit, "_birthNotes", "Not saved yet");
             Invoke(edit, "SaveNow");
@@ -110,6 +116,9 @@ public class EventNotesUiTests
             Invoke(edit, "SaveNow");
             Assert.Equal("1950", store.GetPerson(person.Id)!.Birth!.Date);
             Assert.Empty(store.GetPerson(person.Id)!.Birth!.Notes);
+            Assert.Equal("Natural causes", store.GetPerson(person.Id)!.Death!.Cause);
+            SetField(edit, "_deathCause", "");
+            Invoke(edit, "SaveNow");
             Assert.Null(store.GetPerson(person.Id)!.Death);
             Assert.Equal(["Common"], store.GetPerson(person.Id)!.Notes);
             SetField(edit, "_birthDate", "");
@@ -127,6 +136,9 @@ public class EventNotesUiTests
 
     private static void SetField(object component, string name, object value) =>
         component.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(component, value);
+
+    private static object? GetField(object component, string name) =>
+        component.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(component);
 
     private static void Invoke(object component, string name, params object?[] arguments) =>
         component.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(component, arguments);
