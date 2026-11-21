@@ -76,7 +76,7 @@
                             <input class="input" @bind="_occupation" @bind:after="ScheduleSave"/>
                         </label>
                     </div>
-                    <div class="form-grid">
+                    <div class="form-grid event-notes-grid">
                         <label>@L["Field_Birth"] – @L["Field_Date"]
                             <input class="input @(_birthDateError ? "invalid" : "")" @bind="_birthDate"
                                    @bind:after="ScheduleBirthDateSave"/>
@@ -87,6 +87,9 @@
                         </label>
                         <label>@L["Field_Birth"] – @L["Field_Place"]
                             <input class="input" @bind="_birthPlace" @bind:after="ScheduleSave"/>
+                        </label>
+                        <label>@L["Field_BirthNotes"]
+                            <textarea class="input event-notes-input" rows="1" @bind="_birthNotes" @bind:after="ScheduleSave"></textarea>
                         </label>
                         <label>@L["Field_Death"] – @L["Field_Date"]
                             <input class="input @(_deathDateError ? "invalid" : "")" @bind="_deathDate"
@@ -103,13 +106,17 @@
                         <label>@L["Field_Death"] – @L["Field_Place"]
                             <input class="input" @bind="_deathPlace" @bind:after="ScheduleSave"/>
                         </label>
+                        <label>@L["Field_DeathNotes"]
+                            <textarea class="input event-notes-input" rows="1" @bind="_deathNotes" @bind:after="ScheduleSave"></textarea>
+                        </label>
                     </div>
                     <div class="form-grid">
                         <label>@L["Field_AddressLines"]
                             <input class="input" @bind="_addressLine" @bind:after="ScheduleSave"/>
                         </label>
                         <label>@L["Field_PostalCode"]
-                            <input class="input" @bind="_person.Address.PostalCode" @bind:after="ScheduleSave"/>
+                            <input class="input postal-code-input" maxlength="5" inputmode="numeric"
+                                   @bind="_person.Address.PostalCode" @bind:after="ScheduleSave"/>
                         </label>
                         <label>@L["Field_City"]
                             <input class="input" @bind="_person.Address.City" @bind:after="ScheduleSave"/>
@@ -213,7 +220,7 @@
                                         <em class="muted">—</em>
                                     }
                                 </div>
-                                <div class="form-grid">
+                                <div class="form-grid event-notes-grid">
                                     <label>@L["Field_Status"]
                                         <select class="input" value="@FamilyStatus.GetStatus(fam)"
                                                 @onchange="e => SetStatus(fam.Id, e.Value!.ToString()!)">
@@ -237,6 +244,10 @@
                                         <label>@L["Field_MarriagePlace"]
                                             <input class="input" value="@fam.Marriage?.Place"
                                                    @onchange="e => SetMarriagePlace(fam.Id, e.Value!.ToString())"/>
+                                        </label>
+                                        <label>@L["Field_MarriageNotes"]
+                                            <textarea class="input event-notes-input" rows="1" value="@string.Join("\n", fam.Marriage?.Notes ?? [])"
+                                                      @onchange="e => SetMarriageNotes(fam.Id, e.Value?.ToString())"></textarea>
                                         </label>
                                     }
                                 </div>
@@ -348,7 +359,7 @@
     }
 
     // Editable mirrors of event-backed fields
-    private string _birthDate = "", _birthPlace = "", _deathDate = "", _deathPlace = "";
+    private string _birthDate = "", _birthPlace = "", _birthNotes = "", _deathDate = "", _deathPlace = "", _deathNotes = "";
     private string _occupation = "", _notes = "", _addressLine = "";
     private bool _birthDateError, _deathDateError, _lifeSpanError;
     private readonly Dictionary<string, string> _marriageDateErrors = [];
@@ -399,8 +410,10 @@
         _person = person;
         _birthDate = GedcomDate.Display(person.Birth?.Date, CultureInfo.CurrentUICulture);
         _birthPlace = person.Birth?.Place ?? "";
+        _birthNotes = string.Join("\n", person.Birth?.Notes ?? []);
         _deathDate = GedcomDate.Display(person.Death?.Date, CultureInfo.CurrentUICulture);
         _deathPlace = person.Death?.Place ?? "";
+        _deathNotes = string.Join("\n", person.Death?.Notes ?? []);
         _occupation = person.Occupation ?? "";
         _notes = string.Join("\n", person.Notes);
         _addressLine = string.Join(", ", person.Address.Lines);
@@ -469,10 +482,10 @@
             return;
         }
 
-        ApplyEvent(IndividualEventType.BIRT, birth, Trim(_birthPlace), null);
-        ApplyEvent(IndividualEventType.DEAT, death, Trim(_deathPlace), null);
+        ApplyEvent(IndividualEventType.BIRT, birth, Trim(_birthPlace), null, SplitNotes(_birthNotes));
+        ApplyEvent(IndividualEventType.DEAT, death, Trim(_deathPlace), null, SplitNotes(_deathNotes));
         ApplyEvent(IndividualEventType.OCCU, null, null, Trim(_occupation));
-        _person.Notes = _notes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        _person.Notes = SplitNotes(_notes);
         _person.Address.Lines = _addressLine.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
         Store.UpdatePersonFacts(_person);
@@ -480,11 +493,11 @@
         ShowToast(L["Toast_Saved"]);
     }
 
-    private void ApplyEvent(IndividualEventType type, string? date, string? place, string? value)
+    private void ApplyEvent(IndividualEventType type, string? date, string? place, string? value, List<string>? notes = null)
     {
         if (_person is null) return;
-        var hasContent = date is not null || place is not null || value is not null;
         var ev = _person.Events.FirstOrDefault(e => e.Type == type);
+        var hasContent = date is not null || place is not null || value is not null || (notes ?? ev?.Notes)?.Count > 0;
         if (!hasContent)
         {
             if (ev is not null) _person.Events.Remove(ev);
@@ -495,7 +508,11 @@
         ev.Date = date;
         ev.Place = place;
         ev.Value = value;
+        if (notes is not null) ev.Notes = notes;
     }
+
+    private static List<string> SplitNotes(string text) =>
+        text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
     private string? NormalizeDate(string input, out bool error)
     {
@@ -652,6 +669,9 @@
 
     private void SetMarriagePlace(string familyId, string? place) =>
         UpdateMarriage(familyId, marriage => marriage.Place = Trim(place ?? ""));
+
+    private void SetMarriageNotes(string familyId, string? notes) =>
+        UpdateMarriage(familyId, marriage => marriage.Notes = SplitNotes(notes ?? ""));
 
     private void UpdateMarriage(string familyId, Action<FamilyEvent> update)
     {

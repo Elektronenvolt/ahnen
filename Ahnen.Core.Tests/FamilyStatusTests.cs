@@ -15,7 +15,7 @@ public class FamilyStatusTests
     [InlineData("DIVF", true)]
     public void Repeated_status_transitions_preserve_unrelated_events_and_marriage_details(string status, bool married)
     {
-        var marriage = new FamilyEvent { Type = FamilyEventType.MARR, Date = "1950", Place = "Town" };
+        var marriage = new FamilyEvent { Type = FamilyEventType.MARR, Date = "1950", Place = "Town", Notes = ["Wedding note"] };
         var other = new FamilyEvent { Type = FamilyEventType.EVEN, TypeDetail = "Reunion" };
         var family = new Family
         {
@@ -33,6 +33,7 @@ public class FamilyStatusTests
             Assert.Same(marriage, retained);
             Assert.Equal("1950", retained.Date);
             Assert.Equal("Town", retained.Place);
+            Assert.Equal(["Wedding note"], retained.Notes);
         }
         Assert.Equal(1 + (married ? 1 : 0) + (status is "NONE" or "MARR" ? 0 : 1), family.Events.Count);
         GedcomValidator.ValidateLegal(new FamilyTreeData { Families = [family] });

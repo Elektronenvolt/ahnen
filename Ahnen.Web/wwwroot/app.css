@@ -421,6 +421,11 @@ h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 650; }
 .edit-surface .form-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
 }
+.edit-surface .event-notes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, max(250px, calc((100% - .7rem) / 2))), 1fr));
+}
+.edit-surface .event-notes-input { height: calc(1lh + .9rem + 2px); }
+.edit-surface .postal-code-input { width: 50%; }
 .edit-surface .form-grid > *,
 .edit-surface .editor-head > * { min-width: 0; }
 .edit-surface .rel-pedigree { max-width: min(100%, 275px); }

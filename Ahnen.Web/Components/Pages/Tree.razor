@@ -165,9 +165,17 @@
                         {
                             <DetailRow Label="@L["Detail_Born"]" Value="@EventText(birth)" />
                         }
+                        @if (_selected.Birth is { } birthEvent && birthEvent.Notes.Any(n => n.Length > 0))
+                        {
+                            <DetailRow Label="@L["Field_BirthNotes"]" Value="@NotesText(birthEvent.Notes)" />
+                        }
                         @if (_selected.Death is { } death && (death.Date is not null || death.Place is not null))
                         {
                             <DetailRow Label="@L["Detail_Died"]" Value="@EventText(death)" />
+                        }
+                        @if (_selected.Death is { } deathEvent && deathEvent.Notes.Any(n => n.Length > 0))
+                        {
+                            <DetailRow Label="@L["Field_DeathNotes"]" Value="@NotesText(deathEvent.Notes)" />
                         }
                         @if (_selected.Occupation is { Length: > 0 } occ)
                         {
@@ -183,7 +191,15 @@
                         }
                         @if (_selected.Notes.Any(n => n.Length > 0))
                         {
-                            <DetailRow Label="@L["Detail_Notes"]" Value="@string.Join(" · ", _selected.Notes.Where(n => n.Length > 0))" />
+                            <DetailRow Label="@L["Detail_Notes"]" Value="@NotesText(_selected.Notes)" />
+                        }
+                        @foreach (var family in Store.FamiliesAsPartner(_selected.Id))
+                        {
+                            if (family.Marriage is not { } marriage || !marriage.Notes.Any(n => n.Length > 0)) continue;
+                            var partner = family.OtherPartner(_selected.Id) is { } partnerId ? Store.GetPerson(partnerId) : null;
+                            var label = partner is null ? L["Field_MarriageNotes"].Value
+                                : string.Format(L["Detail_MarriageNotesWithPartner"], partner.DisplayName);
+                            <DetailRow Label="@label" Value="@NotesText(marriage.Notes)" />
                         }
 
                         <RelationList Title="@L["Detail_Parents"]" People="_parents" OnSelect="SelectPerson" />
@@ -515,6 +531,9 @@
         var date = GedcomDate.Display(ev.Date, CultureInfo.CurrentUICulture);
         return new[] { date, ev.Place, ev.Value }.JoinNonBlank(" · ");
     }
+
+    private static string NotesText(IEnumerable<string> notes) =>
+        string.Join(" · ", notes.Where(n => n.Length > 0));
 
     public async ValueTask DisposeAsync()
     {

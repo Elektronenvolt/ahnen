@@ -45,7 +45,8 @@ and Three.js (MIT).
     (e.g. *great-uncle / Urgroßonkel*); set any person as root.
 - **Edit page** (`/edit`) — master-detail editor: searchable person list, names/facts/photo/relationship
   sections, auto-save with undo toast, smart date input, photo upload, and safe delete with impact
-  preview. Interface text and control padding are enlarged by 25% for readability, including
+  preview. Common person notes are separate from birth, death, and per-marriage notes.
+  Interface text and control padding are enlarged by 25% for readability, including
   the editor, person lists, dialogs, header, person search, and 2D/3D tree controls;
   fields and actions wrap to fit smaller screens.
   Person-search suggestions use the same enlarged text; select with the mouse or
@@ -232,6 +233,7 @@ GEDCOM link types (partner, parent-child) are, and everything else is derived at
 | `persons[].events[].value` | event payload / `EVEN.TYPE` text |
 | `persons[].events[].date` | `DATE` (canonical GEDCOM date incl. `ABT`/`BEF`/`AFT`) |
 | `persons[].events[].place` | `PLAC` |
+| `persons[].events[].notes[]` | event `NOTE` |
 | `persons[].address.lines` | `ADDR` / `ADR1`, `ADR2` |
 | `persons[].address.city` | `CITY` |
 | `persons[].address.postalCode` | `POST` |
@@ -245,6 +247,7 @@ GEDCOM link types (partner, parent-child) are, and everything else is derived at
 | `families[].events[].typeDetail` | `EVEN.TYPE` text (e.g. `Separation`) |
 | `families[].events[].date` | `DATE` |
 | `families[].events[].place` | `PLAC` |
+| `families[].events[].notes[]` | event `NOTE` |
 | `families[].childRefs[].personId` | `CHIL` |
 | `families[].childRefs[].pedigree` | `INDI.FAMC.PEDI` (BIRTH, ADOPTED, FOSTER, SEALING, OTHER) |
 
